@@ -1,0 +1,1 @@
+//! Representation of producers and their market behaviours.

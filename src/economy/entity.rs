@@ -1,8 +1,10 @@
-/// Representation of generic market entity.
+//! Producers and consumers.
+//! 
+//! Structs representing consumers and producers and their ways of interacting
+//! with the market.
+
 mod entity;
 
-/// Representation of consumers and their market behaviours.
 mod consumer;
 
-/// Representation of producers and their market behaviours.
 mod producer;

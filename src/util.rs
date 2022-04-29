@@ -1,5 +1,9 @@
-/// Collection of all data structures.
+//! Utilities
+//! 
+//! Collection of everything used in program that is not specific to 
+//! this programs function.
+
+
 mod data_structure;
 
-/// Collection of all major algorithms.
 mod algorithm;

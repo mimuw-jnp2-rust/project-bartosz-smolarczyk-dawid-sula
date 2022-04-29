@@ -1,5 +1,5 @@
-/// Algorithm computing lowest cost flow.
+//! Collection of all common algorithms.
+
 mod min_cost_flow;
 
-/// Algorithm computing max value flow.
 mod max_value_flow;

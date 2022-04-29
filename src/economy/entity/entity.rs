@@ -1,3 +1,5 @@
+//! Representation of generic market entity.
+//! 
 //! Basic algorithm:
 //! Producer creates goods untill price is equal to marginal costs. Only r
 //! equires one iteration of the algorithm.

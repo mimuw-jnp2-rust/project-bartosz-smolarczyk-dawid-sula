@@ -1,8 +1,10 @@
-/// City
+//! Cities and connections between them.
+//! 
+//! Structs representing cities on the market, ways they are connected, 
+//! transport costs and networks capacity limits.
+
 mod city;
 
-/// Connection between cities.
 mod connection;
 
-/// Collection of cities and their connections.
 mod network;

@@ -1,11 +1,12 @@
-/// Base representation of mathematical function.
+//! Demand and supply functions.
+//! 
+//! Common tools used to model economic functions and constructs representing 
+//! demand, supply and their difference.
+
 mod base_function;
 
-/// Demand function
 mod demand;
 
-/// Supply function
 mod supply;
 
-/// Difference between supply and demand.
 mod oversupply;
