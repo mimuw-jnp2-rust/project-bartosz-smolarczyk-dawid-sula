@@ -2,7 +2,7 @@
 
 ## Autorzy
 - Dawid Sula (@dawidsula26 na githubie)
-- Bartosz Smolarczyk (@... na githubie)
+- Bartosz Smolarczyk (@SmolSir na githubie)
 
 ## Opis
 Aplikacja analizująca zachowanie cen na rynku, na którym ważnym czynnikiem są koszty transportu. Aplikacja otrzymywałaby: siatkę połączeń pomiędzy różnymi miejscami; koszty transportu towaru między nimi; funkcje popytu i podaży w podanych miejscach. Na ich podstawie ustalałaby jak ukształtują się ceny w różnych miejsach.
