@@ -1,1 +1,0 @@
-//! Difference between supply and demand.
