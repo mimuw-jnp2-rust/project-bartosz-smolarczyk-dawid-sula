@@ -29,7 +29,6 @@ pub struct Connection {
     id_from: CityId,
     id_to: CityId,
     cost: Value,
-    max_volume: Volume,
 }
 
 impl Connection {
@@ -38,7 +37,6 @@ impl Connection {
             id_from,
             id_to,
             cost,
-            max_volume,
         }
     }
 
@@ -52,10 +50,6 @@ impl Connection {
 
     pub fn get_cost(&self) -> Value {
         self.cost
-    }
-
-    pub fn get_max_volume(&self) -> Volume {
-        self.max_volume
     }
 }
 
@@ -80,11 +74,7 @@ impl Geography {
     pub fn add_connection(&mut self, connection: Connection) {
         let id_from = connection.get_from_id();
         let id_to = connection.get_to_id();
-        self.connections
-            .get_mut(&id_from)
-            .unwrap()
-            .push(connection.clone());
-        self.connections.get_mut(&id_to).unwrap().push(connection);
+        self.connections.get_mut(&id_from).unwrap().push(connection);
     }
 
     pub fn get_cities(&self) -> Vec<&City> {

@@ -7,19 +7,19 @@ use std::cmp::min;
 
 #[derive(Clone, Debug)]
 pub struct Function {
-    arg_min: i32,
-    values: Vec<i32>,
+    arg_min: Value,
+    values: Vec<Volume>,
 }
 
 impl Function {
-    pub fn new_empty() -> Function {
+    pub fn zero() -> Function {
         Function {
             arg_min: 0,
             values: vec![0],
         }
     }
 
-    pub fn new(arg_min: i32, values: Vec<i32>) -> Function {
+    pub fn new(arg_min: Value, values: Vec<Volume>) -> Function {
         Function { arg_min, values }
     }
 
@@ -28,7 +28,7 @@ impl Function {
     }
 
     pub fn arg_max(&self) -> Value {
-        self.arg_min + (self.values.len() as i32)
+        self.arg_min + (self.values.len() as Value)
     }
 
     pub fn value_at(&self, arg: Value) -> Volume {
@@ -52,13 +52,14 @@ impl Function {
         res
     }
 
-    pub fn add_value(&mut self, val: Volume) {
+    pub fn add_value(&mut self, val: Volume) -> &mut Self {
         for i in &mut self.values {
             *i += val
         }
+        self
     }
 
-    pub fn add_function(&mut self, fun: &Self) {
+    pub fn add_function(&mut self, fun: &Self) -> &mut Self {
         let new_min_arg = min(self.arg_min(), fun.arg_min());
         let new_max_arg = max(self.arg_max(), fun.arg_max());
 
@@ -70,9 +71,10 @@ impl Function {
 
         self.arg_min = new_min_arg;
         self.values = new_values;
+        self
     }
 
-    pub fn substract_function(&mut self, fun: &Self) {
+    pub fn substract_function(&mut self, fun: &Self) -> &mut Self {
         let new_min_arg = min(self.arg_min(), fun.arg_min());
         let new_max_arg = max(self.arg_max(), fun.arg_max());
 
@@ -84,10 +86,26 @@ impl Function {
 
         self.arg_min = new_min_arg;
         self.values = new_values;
+        self
     }
 
-    pub fn shift(&mut self, val: Value) {
-        self.arg_min += val
+    pub fn shift(&mut self, val: Value) -> &mut Self {
+        self.arg_min += val;
+        self
+    }
+
+    pub fn intersect(&self, fun: &Self) -> Value {
+        let res_min = min(self.arg_min(), fun.arg_min());
+        let res_max = max(self.arg_max(), fun.arg_max());
+
+        let mut res = (Value::MAX, res_min);
+        for i in res_min..res_max {
+            let diff = (self.value_at(i) - fun.value_at(i)).abs();
+            if diff < res.0 {
+                res = (diff, i)
+            }
+        }
+        res.1
     }
 }
 

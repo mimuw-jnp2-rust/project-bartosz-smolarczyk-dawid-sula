@@ -16,8 +16,8 @@ pub struct CityData {
 impl CityData {
     fn new() -> CityData {
         CityData {
-            demand: Function::new(0, vec![]),
-            supply: Function::new(0, vec![]),
+            demand: Function::zero(),
+            supply: Function::zero(),
         }
     }
 
@@ -26,11 +26,11 @@ impl CityData {
     }
 
     fn add_demand(&mut self, demand: &Function) {
-        self.demand.add_function(demand)
+        self.demand.add_function(demand);
     }
 
     fn substract_demand(&mut self, demand: &Function) {
-        self.demand.substract_function(demand)
+        self.demand.substract_function(demand);
     }
 
     pub fn get_supply(&self) -> &Function {
@@ -38,11 +38,11 @@ impl CityData {
     }
 
     fn add_supply(&mut self, supply: &Function) {
-        self.supply.add_function(supply)
+        self.supply.add_function(supply);
     }
 
     fn substract_supply(&mut self, supply: &Function) {
-        self.supply.substract_function(supply)
+        self.supply.substract_function(supply);
     }
 }
 
@@ -50,6 +50,9 @@ impl CityData {
 pub struct Market {
     geography: Geography,
     cities: HashMap<CityId, CityData>,
+
+    /// Currect prices in cities. All values are 0 if they haven't
+    /// been calculated yet.
     prices: HashMap<CityId, Value>,
 }
 
@@ -104,7 +107,65 @@ impl Market {
         &self.prices
     }
 
-    pub fn update_prices(&self) {
-        
+    fn calculate_groups(
+        &self,
+        pos: CityId,
+        group_id: CityId,
+        group_diff: Value,
+        groups: &mut HashMap<CityId, (CityId, Value)>,
+    ) {
+        if !groups.contains_key(&pos) {
+            return;
+        }
+        groups.get_mut(&pos).unwrap().0 = group_id;
+        groups.get_mut(&pos).unwrap().1 = group_diff;
+
+        let connections = self.geography.get_connections();
+        for conn in connections[pos] {
+            let id_from = conn.get_from_id();
+            let id_to = conn.get_to_id();
+            let cost = conn.get_cost();
+
+            let price_from = self.prices[&id_from];
+            let price_to = self.prices[&id_to];
+
+            if (price_from - price_to).abs() >= cost {
+                self.calculate_groups(id_to, group_id, group_diff + price_from - price_to, groups)
+            }
+        }
+    }
+
+    pub fn update_prices(&mut self) {
+        // Map id -> (group_id, price_compared_to_groups_base).
+        let mut groups: HashMap<CityId, (CityId, Value)> = HashMap::new();
+        for i in self.cities.keys() {
+            self.calculate_groups(*i, *i, 0, &mut groups);
+        }
+
+        // Map group_id -> [(id, price_compared_to_groups_base)].
+        let mut group_lists: HashMap<CityId, Vec<(CityId, Value)>> =
+            self.cities.keys().map(|x| (*x, vec![])).collect();
+        for city in groups {
+            group_lists
+                .get_mut(&city.1 .0)
+                .unwrap()
+                .push((city.0, city.1 .1));
+        }
+
+        for group in group_lists {
+            let mut demand = Function::zero();
+            let mut supply = Function::zero();
+
+            for (city_id, price_diff) in &group.1 {
+                let city = &self.cities[city_id];
+                demand.add_function(city.get_demand().clone().shift(*price_diff));
+                supply.add_function(city.get_supply().clone().shift(*price_diff));
+            }
+
+            let price = demand.intersect(&supply);
+            for (city_id, price_diff) in &group.1 {
+                *self.prices.get_mut(city_id).unwrap() = price + price_diff;
+            }
+        }
     }
 }
