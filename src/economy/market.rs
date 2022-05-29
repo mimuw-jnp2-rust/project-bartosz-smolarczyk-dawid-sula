@@ -14,8 +14,11 @@ pub struct CityData {
 }
 
 impl CityData {
-    fn new(demand: Function, supply: Function) -> CityData {
-        CityData { demand, supply }
+    fn new() -> CityData {
+        CityData {
+            demand: Function::new(0, vec![]),
+            supply: Function::new(0, vec![]),
+        }
     }
 
     pub fn get_demand(&self) -> &Function {
@@ -47,13 +50,25 @@ impl CityData {
 pub struct Market {
     geography: Geography,
     cities: HashMap<CityId, CityData>,
+    prices: HashMap<CityId, Value>,
 }
 
 impl Market {
     pub fn new(geography: Geography) -> Market {
+        let cities: HashMap<CityId, CityData> = geography
+            .get_cities()
+            .into_iter()
+            .map(|x| (x.get_id(), CityData::new()))
+            .collect();
+        let prices: HashMap<CityId, Value> = geography
+            .get_cities()
+            .into_iter()
+            .map(|x| (x.get_id(), 0))
+            .collect();
         Market {
             geography,
-            cities: HashMap::new(),
+            cities,
+            prices,
         }
     }
 
@@ -85,51 +100,11 @@ impl Market {
             .substract_demand(cons.get_demand())
     }
 
-    pub fn calculate_prices(&self) -> HashMap<CityId, Value> {
-        let mut builder = GraphBuilder::<CityId>::new();
+    pub fn get_prices(&self) -> &HashMap<CityId, Value> {
+        &self.prices
+    }
 
-        for con in self.geography.get_connections().into_iter().flatten() {
-            let from = con.get_from_id();
-            let to = con.get_to_id();
-            let capacity = con.get_max_volume();
-            let cost = con.get_cost();
-            builder.add_edge(from, to, Capacity(capacity), Cost(cost));
-        }
-        for city in self.geography.get_cities() {
-            let supply = &self.cities[&city.get_id()].get_supply();
-            let min_price = supply.arg_min();
-            let max_price = supply.arg_max();
-            let mut prev_volume = 0;
-            for seg in supply.value_at_interval(min_price, max_price) {
-                let (seg_min_price, _, seg_volume) = seg;
-                builder.add_edge(
-                    Vertex::Source,
-                    city.get_id(),
-                    Capacity(seg_volume - prev_volume),
-                    Cost(seg_min_price),
-                );
-                prev_volume = seg_volume
-            }
-
-            let demand = &self.cities[&city.get_id()].get_demand();
-            let min_price = demand.arg_min();
-            let max_price = demand.arg_max();
-            prev_volume = 0;
-            for seg in demand
-                .value_at_interval(min_price, max_price)
-                .into_iter()
-                .rev()
-            {
-                let (seg_min_price, _, seg_volume) = seg;
-                builder.add_edge(
-                    city.get_id(),
-                    Vertex::Sink,
-                    Capacity(seg_volume - prev_volume),
-                    Cost(seg_min_price),
-                );
-            }
-        }
-
-        todo!()
+    pub fn update_prices(&self) {
+        
     }
 }

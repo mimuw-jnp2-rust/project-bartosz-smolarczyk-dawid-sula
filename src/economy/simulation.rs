@@ -8,18 +8,14 @@ use crate::economy::market::Market;
 use crate::util::types::Value;
 use std::collections::HashMap;
 
-pub struct Simulation {
+pub struct SimulationBuilder {
     geography: Geography,
-    producers: Vec<Producer>,
-    consumers: Vec<Consumer>,
 }
 
-impl Simulation {
-    pub fn new() -> Simulation {
-        Simulation {
+impl SimulationBuilder {
+    pub fn new() -> SimulationBuilder {
+        SimulationBuilder {
             geography: Geography::new(),
-            producers: vec![],
-            consumers: vec![],
         }
     }
 
@@ -31,6 +27,26 @@ impl Simulation {
         self.geography.add_connection(connection)
     }
 
+    pub fn build(self) -> Simulation {
+        Simulation::new(self.geography)
+    }
+}
+
+pub struct Simulation {
+    market: Market,
+    producers: Vec<Producer>,
+    consumers: Vec<Consumer>,
+}
+
+impl Simulation {
+    fn new(geography: Geography) -> Simulation {
+        Simulation {
+            market: Market::new(geography),
+            producers: vec![],
+            consumers: vec![],
+        }
+    }
+
     pub fn add_producer(&mut self, producer: Producer) {
         self.producers.push(producer)
     }
@@ -39,25 +55,20 @@ impl Simulation {
         self.consumers.push(consumer)
     }
 
-    pub fn calculate_prices(&mut self) -> HashMap<CityId, Value> {
-        let mut prices = HashMap::new();
-
-        for i in 1..10 {
-            if i != 1 {
-                for prod in &mut self.producers {
-                    prod.update(&self.geography, &prices)
-                }
-            }
-
-            let mut market = Market::new(self.geography.clone());
-            for prod in &self.producers {
-                market.add_producer(prod)
-            }
-            for cons in &self.consumers {
-                market.add_consumer(cons)
-            }
-            prices = market.calculate_prices();
+    fn simulate_round(&mut self) {
+        self.market.update_prices();
+        for prod in &mut self.producers {
+            prod.update(&mut self.market)
         }
-        prices
+        for cons in &mut self.consumers {
+            cons.update(&mut self.market)
+        }
+    }
+
+    pub fn calculate_prices(&mut self) -> &HashMap<CityId, Value> {
+        for _ in 1..10 {
+            self.simulate_round()
+        }
+        self.market.get_prices()
     }
 }
