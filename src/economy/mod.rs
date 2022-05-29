@@ -9,6 +9,6 @@ mod entity;
 
 mod geography;
 
-mod market;
+pub mod market;
 
 mod simulation;

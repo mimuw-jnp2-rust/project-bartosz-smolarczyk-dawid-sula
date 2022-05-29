@@ -1,6 +1,6 @@
 use crate::util::types::Value;
 use crate::util::types::Volume;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 pub type CityId = usize;
 
@@ -32,7 +32,7 @@ pub struct Connection {
 }
 
 impl Connection {
-    pub fn new(id_from: CityId, id_to: CityId, cost: Value, max_volume: Volume) -> Connection {
+    pub fn new(id_from: CityId, id_to: CityId, cost: Value) -> Connection {
         Connection {
             id_from,
             id_to,
@@ -55,26 +55,30 @@ impl Connection {
 
 #[derive(Clone, Debug)]
 pub struct Geography {
-    cities: HashMap<CityId, City>,
-    connections: HashMap<CityId, Vec<Connection>>,
+    cities: BTreeMap<CityId, City>,
+    connections: BTreeMap<CityId, Vec<Connection>>,
 }
 
 impl Geography {
     pub fn new() -> Geography {
         Geography {
-            cities: HashMap::new(),
-            connections: HashMap::new(),
+            cities: BTreeMap::new(),
+            connections: BTreeMap::new(),
         }
     }
 
     pub fn add_city(&mut self, city: City) {
+        self.connections.insert(city.get_id(), vec![]);
         self.cities.insert(city.get_id(), city);
     }
 
     pub fn add_connection(&mut self, connection: Connection) {
         let id_from = connection.get_from_id();
         let id_to = connection.get_to_id();
+        let rev_connection = Connection::new(id_to, id_from, connection.get_cost());
+
         self.connections.get_mut(&id_from).unwrap().push(connection);
+        self.connections.get_mut(&id_to).unwrap().push(rev_connection);
     }
 
     pub fn get_cities(&self) -> Vec<&City> {

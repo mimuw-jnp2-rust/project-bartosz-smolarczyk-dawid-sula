@@ -218,4 +218,38 @@ mod tests {
             assert_eq!(fun_1.arg_min, -3);
         }
     }
+
+    #[cfg(test)]
+    mod intersection {
+        use super::*;
+
+        #[test]
+        fn basic_1() {
+            let fun_1 = Function::new(3, vec![4, 5, 6, 7, 8]);
+            let fun_2 = Function::new(2, vec![2, 4, 6, 8, 10]);
+            assert_eq!(fun_1.intersect(&fun_2), 3);
+        }
+
+        #[test]
+        fn basic_2() {
+            let fun_1 = Function::new(1, vec![7, 6, 5, 4, 3, 2, 1]);
+            let fun_2 = Function::new(1, vec![1, 2, 3, 4, 5, 6, 7]);
+            assert_eq!(fun_1.intersect(&fun_2), 4);
+        }
+
+        #[test]
+        fn outside_access() {
+            let fun_1 = Function::new(1, vec![1, 2, 3, 3, 3, 3, 3]);
+            let fun_2 = Function::new(1, vec![8, 8, 8, 8, 5, 3, 1]);
+            assert_eq!(fun_1.intersect(&fun_2), 6);
+        }
+
+        #[test]
+        fn double_outside_access() {
+            let fun_1 = Function::new(1, vec![1, 2]);
+            let fun_2 = Function::new(10, vec![2, 3]);
+            assert_eq!(fun_1.value_at(fun_1.intersect(&fun_2)), 2);
+            assert_eq!(fun_2.value_at(fun_1.intersect(&fun_2)), 2);
+        }
+    }
 }

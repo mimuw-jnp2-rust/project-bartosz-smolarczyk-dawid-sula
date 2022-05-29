@@ -6,7 +6,7 @@ use crate::economy::geography::Connection;
 use crate::economy::geography::Geography;
 use crate::economy::market::Market;
 use crate::util::types::Value;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 pub struct SimulationBuilder {
     geography: Geography,
@@ -65,7 +65,7 @@ impl Simulation {
         }
     }
 
-    pub fn calculate_prices(&mut self) -> &HashMap<CityId, Value> {
+    pub fn calculate_prices(&mut self) -> &BTreeMap<CityId, Value> {
         for _ in 1..10 {
             self.simulate_round()
         }
