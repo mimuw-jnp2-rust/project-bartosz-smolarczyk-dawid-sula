@@ -94,18 +94,36 @@ impl Function {
         self
     }
 
-    pub fn intersect(&self, fun: &Self) -> Value {
+    pub fn intersect_with_demand(&self, fun: &Self) -> Value {
         let res_min = min(self.arg_min(), fun.arg_min());
         let res_max = max(self.arg_max(), fun.arg_max());
 
-        let mut res = (Value::MAX, res_min);
+        if self.value_at(res_min) > fun.value_at(res_min) {
+            return Value::MIN;
+        }
+
         for i in res_min..res_max {
-            let diff = (self.value_at(i) - fun.value_at(i)).abs();
-            if diff < res.0 {
-                res = (diff, i)
+            if self.value_at(i) >= fun.value_at(i) {
+                return i;
             }
         }
-        res.1
+        Value::MAX
+    }
+
+    pub fn intersect_with_supply(&self, fun: &Self) -> Value {
+        let res_min = min(self.arg_min(), fun.arg_min());
+        let res_max = max(self.arg_max(), fun.arg_max());
+
+        if self.value_at(res_min) < fun.value_at(res_min) {
+            return Value::MIN;
+        }
+
+        for i in res_min..res_max {
+            if self.value_at(i) <= fun.value_at(i) {
+                return i;
+            }
+        }
+        Value::MAX
     }
 }
 
@@ -227,29 +245,29 @@ mod tests {
         fn basic_1() {
             let fun_1 = Function::new(3, vec![4, 5, 6, 7, 8]);
             let fun_2 = Function::new(2, vec![2, 4, 6, 8, 10]);
-            assert_eq!(fun_1.intersect(&fun_2), 3);
+            assert_eq!(fun_1.intersect_with_supply(&fun_2), 3);
         }
 
         #[test]
         fn basic_2() {
             let fun_1 = Function::new(1, vec![7, 6, 5, 4, 3, 2, 1]);
             let fun_2 = Function::new(1, vec![1, 2, 3, 4, 5, 6, 7]);
-            assert_eq!(fun_1.intersect(&fun_2), 4);
+            assert_eq!(fun_1.intersect_with_supply(&fun_2), 4);
         }
 
         #[test]
         fn outside_access() {
             let fun_1 = Function::new(1, vec![1, 2, 3, 3, 3, 3, 3]);
             let fun_2 = Function::new(1, vec![8, 8, 8, 8, 5, 3, 1]);
-            assert_eq!(fun_1.intersect(&fun_2), 6);
+            assert_eq!(fun_1.intersect_with_demand(&fun_2), 6);
         }
 
         #[test]
         fn double_outside_access() {
             let fun_1 = Function::new(1, vec![1, 2]);
             let fun_2 = Function::new(10, vec![2, 3]);
-            assert_eq!(fun_1.value_at(fun_1.intersect(&fun_2)), 2);
-            assert_eq!(fun_2.value_at(fun_1.intersect(&fun_2)), 2);
+            assert_eq!(fun_1.value_at(fun_1.intersect_with_demand(&fun_2)), 2);
+            assert_eq!(fun_2.value_at(fun_1.intersect_with_demand(&fun_2)), 2);
         }
     }
 }

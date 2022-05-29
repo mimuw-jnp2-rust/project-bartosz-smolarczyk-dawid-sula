@@ -78,7 +78,10 @@ impl Geography {
         let rev_connection = Connection::new(id_to, id_from, connection.get_cost());
 
         self.connections.get_mut(&id_from).unwrap().push(connection);
-        self.connections.get_mut(&id_to).unwrap().push(rev_connection);
+        self.connections
+            .get_mut(&id_to)
+            .unwrap()
+            .push(rev_connection);
     }
 
     pub fn get_cities(&self) -> Vec<&City> {

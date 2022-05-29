@@ -135,7 +135,7 @@ impl Market {
                 self.calculate_groups_dfs(
                     id_to,
                     group_id,
-                    group_diff + price_to - price_from,
+                    group_diff + cost * (price_to - price_from).signum(),
                     groups,
                 )
             }
@@ -174,16 +174,28 @@ impl Market {
                 supply.add_function(city.get_supply().clone().shift(*price_diff));
             }
 
-            let price = demand.intersect(&supply);
+            let price = demand.intersect_with_supply(&supply);
             for (city_id, price_diff) in &group.1 {
+                println! {"update_prices: {} {}", price, price_diff};
                 *self.prices.get_mut(city_id).unwrap() = price + price_diff;
             }
         }
+    }
+
+    pub fn reset_prices(&mut self) {
+        let prices: BTreeMap<CityId, Value> = self
+            .geography
+            .get_cities()
+            .into_iter()
+            .map(|x| (x.get_id(), 0))
+            .collect();
     }
 }
 
 #[cfg(test)]
 pub mod tests {
+    use crate::economy::entity::Consumer;
+    use crate::economy::entity::Producer;
     use crate::economy::function::Function;
     use crate::economy::geography::City;
     use crate::economy::geography::CityId;
@@ -208,17 +220,13 @@ pub mod tests {
 
         fn test_groups(market: &Market, groups: &BTreeMap<CityId, Vec<(CityId, Value)>>) {
             let mut id_to_group: BTreeMap<CityId, CityId> = BTreeMap::new();
-            let mut prices: BTreeMap<CityId, Value> = BTreeMap::new();
-            let prices_expected = market.get_prices();
+            let prices = market.get_prices();
 
             for (base, group) in groups {
                 for (id, diff) in group {
-                    prices.insert(*id, prices_expected[base] + diff);
                     id_to_group.insert(*id, *base);
                 }
             }
-
-            assert_eq!(&prices, prices_expected);
 
             for vec in market.geography.get_connections() {
                 for conn in vec {
@@ -253,7 +261,7 @@ pub mod tests {
         }
 
         #[test]
-        pub fn two_nodes_one_group() {
+        pub fn two_nodes_one_group_1() {
             let mut geography = Geography::new();
             geography.add_city(City::new(0, String::new()));
             geography.add_city(City::new(1, String::new()));
@@ -261,6 +269,27 @@ pub mod tests {
 
             let cities = generate_default_cities(&geography);
             let prices = BTreeMap::from([(0, 5), (1, 25)]);
+
+            let market = Market {
+                geography,
+                cities,
+                prices,
+            };
+            let groups = market.calculate_groups();
+
+            assert_eq!(groups.iter().filter(|(_, v)| v.len() != 0).count(), 1);
+            test_groups(&market, &groups);
+        }
+
+        #[test]
+        pub fn two_nodes_one_group_2() {
+            let mut geography = Geography::new();
+            geography.add_city(City::new(0, String::new()));
+            geography.add_city(City::new(1, String::new()));
+            geography.add_connection(Connection::new(0, 1, 5));
+
+            let cities = generate_default_cities(&geography);
+            let prices = BTreeMap::from([(0, 0), (1, Value::MAX)]);
 
             let market = Market {
                 geography,
@@ -296,8 +325,7 @@ pub mod tests {
 
             assert_eq!(groups.iter().filter(|(_, v)| v.len() != 0).count(), 2);
             test_groups(&market, &groups);
-        } 
-
+        }
 
         #[test]
         pub fn three_nodes_one_group() {
@@ -322,7 +350,7 @@ pub mod tests {
 
             assert_eq!(groups.iter().filter(|(_, v)| v.len() != 0).count(), 1);
             test_groups(&market, &groups);
-        } 
+        }
 
         #[test]
         pub fn five_nodes_two_groups() {
@@ -353,7 +381,7 @@ pub mod tests {
 
             assert_eq!(groups.iter().filter(|(_, v)| v.len() != 0).count(), 2);
             test_groups(&market, &groups);
-        } 
+        }
     }
 
     #[cfg(test)]
@@ -364,7 +392,171 @@ pub mod tests {
         fn single_node_1() {
             let mut geography = Geography::new();
             geography.add_city(City::new(0, "city".to_string()));
-            
+
+            let city_consumption = Consumer::new(0, Function::new(0, vec![4, 3, 2, 1, 0]));
+            let city_production = Producer::new(0, Function::new(0, vec![0, 1, 2, 3, 4]));
+
+            let mut market = Market::new(geography);
+            market.add_consumer(&city_consumption);
+            market.add_producer(&city_production);
+
+            market.update_prices();
+            let prices = market.get_prices();
+
+            assert_eq!(prices[&0], 2);
+        }
+
+        #[test]
+        fn single_node_2() {
+            let mut geography = Geography::new();
+            geography.add_city(City::new(0, "city".to_string()));
+
+            let city_consumption = Consumer::new(0, Function::new(0, vec![8, 6, 5, 4, 3, 2, 1, 0]));
+            let city_production = Producer::new(0, Function::new(0, vec![0, 1, 2, 2, 3, 3, 3]));
+
+            let mut market = Market::new(geography);
+            market.add_consumer(&city_consumption);
+            market.add_producer(&city_production);
+
+            market.update_prices();
+            let prices = market.get_prices();
+
+            assert_eq!(prices[&0], 4);
+        }
+
+        #[test]
+        fn single_node_3() {
+            let mut geography = Geography::new();
+            geography.add_city(City::new(0, "city".to_string()));
+
+            let city_consumption_1 = Consumer::new(0, Function::new(1, vec![10, 8, 5, 3, 2, 0]));
+            let city_consumption_2 =
+                Consumer::new(0, Function::new(0, vec![8, 6, 5, 4, 3, 2, 1, 0]));
+            let city_production_1 = Producer::new(0, Function::new(0, vec![0, 1, 4, 7]));
+            let city_production_2 = Producer::new(0, Function::new(1, vec![0, 1, 2, 2, 3, 3, 3]));
+
+            let mut market = Market::new(geography);
+            market.add_consumer(&city_consumption_1);
+            market.add_consumer(&city_consumption_2);
+            market.add_producer(&city_production_1);
+            market.add_producer(&city_production_2);
+
+            market.update_prices();
+            let prices = market.get_prices();
+
+            assert_eq!(prices[&0], 3);
+        }
+
+        #[test]
+        fn single_node_4() {
+            let mut geography = Geography::new();
+            geography.add_city(City::new(0, "city".to_string()));
+
+            let city_consumption = Consumer::new(0, Function::new(0, vec![8, 7, 6]));
+            let city_production = Producer::new(0, Function::new(0, vec![0, 1, 2]));
+
+            let mut market = Market::new(geography);
+            market.add_consumer(&city_consumption);
+            market.add_producer(&city_production);
+
+            market.update_prices();
+            let prices = market.get_prices();
+
+            assert_eq!(prices[&0], Value::MAX);
+        }
+
+        #[test]
+        fn two_nodes_1() {
+            let mut geography = Geography::new();
+            geography.add_city(City::new(0, "city 0".to_string()));
+            geography.add_city(City::new(1, "city 1".to_string()));
+            geography.add_connection(Connection::new(0, 1, 10));
+
+            let city_0_consumption = Consumer::new(0, Function::new(0, vec![13, 13, 12, 11, 13]));
+            let city_0_production = Producer::new(0, Function::new(0, vec![11, 11, 12, 13, 13]));
+            let city_1_consumption = Consumer::new(1, Function::new(20, vec![3, 3, 2, 1, 1]));
+            let city_1_production = Producer::new(1, Function::new(20, vec![1, 1, 2, 3, 3]));
+
+            let mut market = Market::new(geography);
+            market.add_consumer(&city_0_consumption);
+            market.add_producer(&city_0_production);
+            market.add_consumer(&city_1_consumption);
+            market.add_producer(&city_1_production);
+
+            market.update_prices();
+            let prices = market.get_prices();
+
+            assert_eq!(prices[&0], 2);
+            assert_eq!(prices[&1], 22);
+        }
+
+        #[test]
+        fn two_nodes_2() {
+            let mut geography = Geography::new();
+            geography.add_city(City::new(0, "city 0".to_string()));
+            geography.add_city(City::new(1, "city 1".to_string()));
+            geography.add_connection(Connection::new(0, 1, 10));
+
+            let city_0_consumption = Consumer::new(0, Function::new(0, vec![13, 13, 12, 11, 13]));
+            let city_0_production = Producer::new(0, Function::new(0, vec![11, 11, 12, 13, 13]));
+            let city_1_consumption = Consumer::new(1, Function::new(20, vec![3, 3, 2, 1, 1]));
+            let city_1_production = Producer::new(1, Function::new(20, vec![1, 1, 2, 3, 3]));
+
+            let mut market_base = Market::new(geography);
+            market_base.add_consumer(&city_0_consumption);
+            market_base.add_producer(&city_0_production);
+            market_base.add_consumer(&city_1_consumption);
+            market_base.add_producer(&city_1_production);
+            let mut market = Market {
+                geography: market_base.geography,
+                cities: market_base.cities,
+                prices: BTreeMap::from([(0, 2), (1, 22)]),
+            };
+
+            market.update_prices();
+            let prices = market.get_prices();
+
+            println!("{} {}", prices[&0], prices[&1]);
+
+            assert_eq!(prices[&1] - prices[&0], 10);
+        }
+
+        #[test]
+        fn three_node_1() {
+            let mut geography = Geography::new();
+            geography.add_city(City::new(0, "city 0".to_string()));
+            geography.add_city(City::new(1, "city 1".to_string()));
+            geography.add_city(City::new(2, "city 2".to_string()));
+            geography.add_connection(Connection::new(0, 1, 3));
+            geography.add_connection(Connection::new(1, 2, 2));
+
+            let city_0_consumption = Consumer::new(0, Function::new(0, vec![10]));
+            let city_0_production = Producer::new(0, Function::new(0, vec![10]));
+            let city_1_consumption = Consumer::new(1, Function::new(5, vec![10]));
+            let city_1_production = Producer::new(1, Function::new(5, vec![10]));
+            let city_2_consumption = Consumer::new(1, Function::new(8, vec![10]));
+            let city_2_production = Producer::new(1, Function::new(8, vec![10]));
+
+            let mut market_base = Market::new(geography);
+            market_base.add_consumer(&city_0_consumption);
+            market_base.add_producer(&city_0_production);
+            market_base.add_consumer(&city_1_consumption);
+            market_base.add_producer(&city_1_production);
+            market_base.add_consumer(&city_2_consumption);
+            market_base.add_producer(&city_2_production);
+            let mut market = Market {
+                geography: market_base.geography,
+                cities: market_base.cities,
+                prices: BTreeMap::from([(0, 0), (1, 5), (2, 8)]),
+            };
+
+            market.update_prices();
+            let prices = market.get_prices();
+
+            println!("{} {}", prices[&0], prices[&1]);
+
+            assert_eq!(prices[&1] - prices[&0], 3);
+            assert_eq!(prices[&2] - prices[&1], 2);
         }
     }
 }
