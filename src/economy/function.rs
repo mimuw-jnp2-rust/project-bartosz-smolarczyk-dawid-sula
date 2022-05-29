@@ -12,6 +12,13 @@ pub struct Function {
 }
 
 impl Function {
+    pub fn new_empty() -> Function {
+        Function {
+            arg_min: 0,
+            values: vec![0],
+        }
+    }
+
     pub fn new(arg_min: i32, values: Vec<i32>) -> Function {
         Function { arg_min, values }
     }
@@ -51,7 +58,7 @@ impl Function {
         }
     }
 
-    pub fn add_function(&mut self, fun: Self) {
+    pub fn add_function(&mut self, fun: &Self) {
         let new_min_arg = min(self.arg_min(), fun.arg_min());
         let new_max_arg = max(self.arg_max(), fun.arg_max());
 
@@ -65,15 +72,18 @@ impl Function {
         self.values = new_values;
     }
 
-    pub fn substract_function(&mut self, fun: Self) {
-        let mut fun_negated = Function {
-            arg_min: fun.arg_min,
-            values: fun.values,
-        };
-        for v in &mut fun_negated.values {
-            *v *= -1
+    pub fn substract_function(&mut self, fun: &Self) {
+        let new_min_arg = min(self.arg_min(), fun.arg_min());
+        let new_max_arg = max(self.arg_max(), fun.arg_max());
+
+        let mut new_values = vec![];
+
+        for i in new_min_arg..new_max_arg {
+            new_values.push(self.value_at(i) - fun.value_at(i))
         }
-        self.add_function(fun_negated);
+
+        self.arg_min = new_min_arg;
+        self.values = new_values;
     }
 
     pub fn shift(&mut self, val: Value) {
@@ -160,7 +170,7 @@ mod tests {
         fn add_function_1() {
             let mut fun_1 = Function::new(5, vec![8, 7, 5, 4]);
             let fun_2 = Function::new(5, vec![1, 2, 5, 7]);
-            fun_1.add_function(fun_2);
+            fun_1.add_function(&fun_2);
             assert_eq!(fun_1.arg_min, 5);
             assert_eq!(fun_1.values, vec! {9, 9, 10, 11});
         }
@@ -169,7 +179,7 @@ mod tests {
         fn add_function_2() {
             let mut fun_1 = Function::new(2, vec![2, 3, 4]);
             let fun_2 = Function::new(2, vec![5, 8]);
-            fun_1.add_function(fun_2);
+            fun_1.add_function(&fun_2);
             assert_eq!(fun_1.arg_min, 2);
             assert_eq!(fun_1.values, vec! {7, 11, 12});
         }
@@ -178,7 +188,7 @@ mod tests {
         fn add_function_3() {
             let mut fun_1 = Function::new(1, vec![5, 7, 6]);
             let fun_2 = Function::new(-2, vec![6, 8, 4, 5, 3, 9, 5, 4]);
-            fun_1.add_function(fun_2);
+            fun_1.add_function(&fun_2);
             assert_eq!(fun_1.arg_min, -2);
             assert_eq!(fun_1.values, vec! {11, 13, 9, 10, 10, 15, 11, 10});
         }

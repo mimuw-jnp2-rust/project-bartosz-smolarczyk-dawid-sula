@@ -1,5 +1,9 @@
 use crate::economy::function::Function;
 use crate::economy::geography::CityId;
+use crate::economy::geography::Geography;
+use crate::economy::market::CityData;
+use crate::util::types::Value;
+use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
 pub struct Producer {
@@ -19,8 +23,12 @@ impl Producer {
         self.city
     }
 
-    pub fn get_supply(&self) -> Function {
-        self.production_costs.clone()
+    pub fn get_supply(&self) -> &Function {
+        &self.production_costs
+    }
+
+    pub fn update(&mut self, geography: &Geography, state: &HashMap<CityId, Value>) {
+        // TODO: some sort of simple update.
     }
 }
 
@@ -39,7 +47,7 @@ impl Consumer {
         self.city
     }
 
-    pub fn get_demand(&self) -> Function {
-        self.usefulness.clone()
+    pub fn get_demand(&self) -> &Function {
+        &self.usefulness
     }
 }
