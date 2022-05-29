@@ -448,24 +448,6 @@ pub mod tests {
         }
 
         #[test]
-        fn single_node_4() {
-            let mut geography = Geography::new();
-            geography.add_city(City::new(0, "city".to_string()));
-
-            let city_consumption = Consumer::new(0, Function::new(0, vec![8, 7, 6]));
-            let city_production = Producer::new(0, Function::new(0, vec![0, 1, 2]));
-
-            let mut market = Market::new(geography);
-            market.add_consumer(&city_consumption);
-            market.add_producer(&city_production);
-
-            market.update_prices();
-            let prices = market.get_prices();
-
-            assert_eq!(prices[&0], Value::MAX);
-        }
-
-        #[test]
         fn two_nodes_1() {
             let mut geography = Geography::new();
             geography.add_city(City::new(0, "city 0".to_string()));

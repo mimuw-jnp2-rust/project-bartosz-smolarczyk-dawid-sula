@@ -99,7 +99,7 @@ impl Function {
         let res_max = max(self.arg_max(), fun.arg_max());
 
         if self.value_at(res_min) > fun.value_at(res_min) {
-            return Value::MIN;
+            return res_min;
         }
 
         for i in res_min..res_max {
@@ -107,7 +107,7 @@ impl Function {
                 return i;
             }
         }
-        Value::MAX
+        res_max
     }
 
     pub fn intersect_with_supply(&self, fun: &Self) -> Value {
@@ -115,7 +115,7 @@ impl Function {
         let res_max = max(self.arg_max(), fun.arg_max());
 
         if self.value_at(res_min) < fun.value_at(res_min) {
-            return Value::MIN;
+            return res_min;
         }
 
         for i in res_min..res_max {
@@ -123,7 +123,7 @@ impl Function {
                 return i;
             }
         }
-        Value::MAX
+        res_max
     }
 }
 
