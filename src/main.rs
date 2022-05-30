@@ -1,12 +1,11 @@
 mod economy;
 mod util;
 
-use std::env;
 use std::path::Path;
 use std::fs::File;
 
 use crate::economy::simulation::Simulation;
-use crate::util::files::Reader;
+use crate::util::files::{Writer, Reader};
 
 fn main() {
     /* get command line arguments from user */
@@ -39,11 +38,9 @@ fn main() {
     /* read the input_file's content preparing the simulation */
     let mut simulation: Simulation = Reader::from_file(&input_file);
 
-    println!("{:#?}", simulation);
-
     /* perform the simulation */
     let prices = simulation.calculate_prices();
     
-    /* print the new prices */
-    println!("Prices are:\n{:#?}", prices);
+    /* write the new prices to output_file */
+    Writer::to_file(&output_file, &simulation);
 }

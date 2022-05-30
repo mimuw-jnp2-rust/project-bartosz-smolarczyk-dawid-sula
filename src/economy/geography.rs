@@ -6,8 +6,8 @@ pub type CityId = usize;
 
 #[derive(Clone, Debug)]
 pub struct City {
-    id: CityId,
-    name: String,
+    pub id: CityId,
+    pub name: String,
 }
 
 impl City {
@@ -55,8 +55,8 @@ impl Connection {
 
 #[derive(Clone, Debug)]
 pub struct Geography {
-    cities: BTreeMap<CityId, City>,
-    connections: BTreeMap<CityId, Vec<Connection>>,
+    pub cities: BTreeMap<CityId, City>,
+    pub connections: BTreeMap<CityId, Vec<Connection>>,
 }
 
 impl Geography {

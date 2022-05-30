@@ -2,13 +2,32 @@
 
 use std::fs::File;
 use text_io::read;
-use std::io::Read;
+use std::io::{Write, Read};
 
 use crate::util::types::{Value, Volume};
 use crate::economy::entity::{Producer, Consumer};
 use crate::economy::function::Function;
 use crate::economy::geography::{City, CityId, Connection};
 use crate::economy::simulation::{SimulationBuilder, Simulation};
+
+pub trait Writer {
+    fn to_file(fd: &File, data: &Self) -> ();
+}
+
+impl Writer for Simulation {
+    fn to_file(mut fd: &File, data: &Simulation) -> () {
+        fd.write("RESULTS\n\n".as_bytes()).expect("Error in write");
+        let prices = data.market.get_prices();
+        for (city_id, price) in prices {
+            let record: String = 
+                data.market.get_geography().cities[city_id].name.clone() +
+                ": " +
+                &price.to_string() +
+                "\n";
+            fd.write(record.as_bytes()).expect("Error in write");
+        }
+    }
+}
 
 pub trait Reader {
     fn from_file(fd: &File) -> Self;
@@ -89,13 +108,13 @@ impl Reader for Simulation {
     fn from_file(fd: &File) -> Simulation {
         let mut simulation_builder = SimulationBuilder::new();
 
-        let mut simulation_header: String = Reader::from_file(fd);
+        let simulation_header: String = Reader::from_file(fd);
         if simulation_header != "SIMULATION" {
             eprintln!("Unknown file content");
             std::process::exit(1);
         }
 
-        let mut cities_header: String = Reader::from_file(fd);
+        let cities_header: String = Reader::from_file(fd);
         if cities_header != "Cities:" {
             eprintln!("Cities not found");
             std::process::exit(1);
@@ -108,7 +127,7 @@ impl Reader for Simulation {
             cities_cnt -= 1;
         }
 
-        let mut connections_header: String = Reader::from_file(fd);
+        let connections_header: String = Reader::from_file(fd);
         if connections_header != "Connections:" {
             eprintln!("Connections not found");
             std::process::exit(1);
@@ -123,7 +142,7 @@ impl Reader for Simulation {
 
         let mut simulation: Simulation = simulation_builder.build();
         
-        let mut producers_header: String = Reader::from_file(fd);
+        let producers_header: String = Reader::from_file(fd);
         if producers_header != "Producers:" {
             eprintln!("Producers not found");
             std::process::exit(1);
@@ -136,7 +155,7 @@ impl Reader for Simulation {
             producers_cnt -= 1;
         }
 
-        let mut consumers_header: String = Reader::from_file(fd);
+        let consumers_header: String = Reader::from_file(fd);
         if consumers_header != "Consumers:" {
             eprintln!("Consumers not found");
             std::process::exit(1);
