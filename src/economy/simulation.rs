@@ -49,10 +49,12 @@ impl Simulation {
     }
 
     pub fn add_producer(&mut self, producer: Producer) {
+        self.market.add_producer(&producer);
         self.producers.push(producer)
     }
 
     pub fn add_consumer(&mut self, consumer: Consumer) {
+        self.market.add_consumer(&consumer);
         self.consumers.push(consumer)
     }
 
