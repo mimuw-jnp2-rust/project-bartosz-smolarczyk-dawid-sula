@@ -32,6 +32,7 @@ impl SimulationBuilder {
     }
 }
 
+#[derive(Debug)]
 pub struct Simulation {
     market: Market,
     producers: Vec<Producer>,

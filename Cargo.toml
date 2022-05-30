@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 mcmf = "2.0.0"
+text_io = "0.1.10"
