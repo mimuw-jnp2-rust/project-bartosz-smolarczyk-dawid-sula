@@ -42,6 +42,9 @@ fn main() {
 
     println!("Simulation is:\n{:#?}", simulation);
 
+    /* perform the simulation */
     let prices = simulation.calculate_prices();
+    
+    /* print the new prices */
     println!("Prices are:\n{:#?}", prices);
 }
