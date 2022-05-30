@@ -11,7 +11,6 @@ use crate::util::files::Reader;
 fn main() {
     /* get command line arguments from user */
     let args: Vec<String> = std::env::args().collect();
-    println!("args are: {:#?}", args);
     if args.len() != 3 {
         eprintln!("Usage: <input file path> <output file path>\n");
         std::process::exit(1);
@@ -40,7 +39,7 @@ fn main() {
     /* read the input_file's content preparing the simulation */
     let mut simulation: Simulation = Reader::from_file(&input_file);
 
-    println!("Simulation is:\n{:#?}", simulation);
+    println!("{:#?}", simulation);
 
     /* perform the simulation */
     let prices = simulation.calculate_prices();

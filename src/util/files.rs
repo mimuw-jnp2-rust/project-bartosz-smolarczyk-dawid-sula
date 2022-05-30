@@ -88,7 +88,6 @@ impl Reader for Consumer {
 impl Reader for Simulation {
     fn from_file(fd: &File) -> Simulation {
         let mut simulation_builder = SimulationBuilder::new();
-        println!("Hey there, file reader!");
 
         let mut simulation_header: String = Reader::from_file(fd);
         if simulation_header != "SIMULATION" {
