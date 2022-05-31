@@ -48,6 +48,10 @@ impl Simulation {
         }
     }
 
+    pub fn change_price(&mut self, city_id: CityId, price: Value) {
+        self.market.change_price(&city_id, &price);
+    }
+
     pub fn add_producer(&mut self, producer: Producer) {
         self.market.add_producer(&producer);
         self.producers.push(producer)

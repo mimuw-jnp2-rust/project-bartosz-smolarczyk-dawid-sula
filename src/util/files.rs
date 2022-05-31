@@ -1,5 +1,6 @@
-//! Input reading functions
+//! Input reading and output writing functions
 
+use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::{Read, Write};
 use text_io::read;
@@ -11,16 +12,23 @@ use crate::economy::simulation::{Simulation, SimulationBuilder};
 use crate::util::types::{Value, Volume};
 
 pub trait Writer {
-    fn to_file(fd: &File, data: &Self) -> ();
+    fn to_file(fd: &File, data: &Self);
 }
 
 impl Writer for Simulation {
-    fn to_file(mut fd: &File, data: &Simulation) -> () {
+    fn to_file(mut fd: &File, data: &Simulation) {
         fd.write_all("RESULTS\n\n".as_bytes())
             .expect("Error in write");
         let prices = data.market.get_prices();
         for (city_id, price) in prices {
-            let record: String = data.market.get_geography().cities[city_id].name.clone()
+            let record: String = data
+                .market
+                .get_geography()
+                .cities
+                .get(city_id)
+                .unwrap()
+                .name
+                .clone()
                 + ": "
                 + &price.to_string()
                 + "\n";
@@ -31,6 +39,14 @@ impl Writer for Simulation {
 
 pub trait Reader {
     fn from_file(fd: &File) -> Self;
+}
+
+fn check_header(fd: &File, expected: String) {
+    let header: String = Reader::from_file(fd);
+    if expected != header {
+        eprintln!("{} not found", expected);
+        std::process::exit(1);
+    }
 }
 
 impl Reader for usize {
@@ -108,17 +124,8 @@ impl Reader for Simulation {
     fn from_file(fd: &File) -> Simulation {
         let mut simulation_builder = SimulationBuilder::new();
 
-        let simulation_header: String = Reader::from_file(fd);
-        if simulation_header != "SIMULATION" {
-            eprintln!("Unknown file content");
-            std::process::exit(1);
-        }
-
-        let cities_header: String = Reader::from_file(fd);
-        if cities_header != "Cities:" {
-            eprintln!("Cities not found");
-            std::process::exit(1);
-        }
+        check_header(fd, String::from("GEOGRAPHY"));
+        check_header(fd, String::from("Cities:"));
 
         let mut cities_cnt: usize = Reader::from_file(fd);
         while cities_cnt > 0 {
@@ -127,11 +134,7 @@ impl Reader for Simulation {
             cities_cnt -= 1;
         }
 
-        let connections_header: String = Reader::from_file(fd);
-        if connections_header != "Connections:" {
-            eprintln!("Connections not found");
-            std::process::exit(1);
-        }
+        check_header(fd, String::from("Connections:"));
 
         let mut connections_cnt: usize = Reader::from_file(fd);
         while connections_cnt > 0 {
@@ -142,11 +145,18 @@ impl Reader for Simulation {
 
         let mut simulation: Simulation = simulation_builder.build();
 
-        let producers_header: String = Reader::from_file(fd);
-        if producers_header != "Producers:" {
-            eprintln!("Producers not found");
-            std::process::exit(1);
+        check_header(fd, String::from("ECONOMY"));
+        check_header(fd, String::from("Prices:"));
+
+        let mut prices_cnt: usize = Reader::from_file(fd);
+        while prices_cnt > 0 {
+            let city_id: CityId = Reader::from_file(fd);
+            let price: Value = Reader::from_file(fd);
+            simulation.change_price(city_id, price);
+            prices_cnt -= 1;
         }
+
+        check_header(fd, String::from("Producers:"));
 
         let mut producers_cnt: usize = Reader::from_file(fd);
         while producers_cnt > 0 {
@@ -155,11 +165,7 @@ impl Reader for Simulation {
             producers_cnt -= 1;
         }
 
-        let consumers_header: String = Reader::from_file(fd);
-        if consumers_header != "Consumers:" {
-            eprintln!("Consumers not found");
-            std::process::exit(1);
-        }
+        check_header(fd, String::from("Consumers:"));
 
         let mut consumers_cnt: usize = Reader::from_file(fd);
         while consumers_cnt > 0 {

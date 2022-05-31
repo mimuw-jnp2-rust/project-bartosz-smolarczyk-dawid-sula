@@ -1,9 +1,11 @@
-SIMULATION
-
+GEOGRAPHY
 Cities: 1
 0 Warsaw
 
 Connections: 0
+
+ECONOMY
+Prices: 0
 
 Producers: 2
 0

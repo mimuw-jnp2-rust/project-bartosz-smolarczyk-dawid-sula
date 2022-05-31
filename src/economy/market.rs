@@ -161,6 +161,10 @@ impl Market {
         group_lists
     }
 
+    pub fn change_price(&mut self, city_id: &CityId, price: &Value) {
+        *self.prices.get_mut(city_id).unwrap() = *price;
+    }
+
     pub fn update_prices(&mut self) {
         let group_lists = self.calculate_groups();
 

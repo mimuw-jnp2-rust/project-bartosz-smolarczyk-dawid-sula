@@ -7,7 +7,9 @@ Connections: 1
 0 1 10
 
 ECONOMY
-Prices: 0
+Prices: 2
+0 2
+1 22
 
 Producers: 2
 0
