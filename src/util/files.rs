@@ -1,14 +1,14 @@
 //! Input reading functions
 
 use std::fs::File;
+use std::io::{Read, Write};
 use text_io::read;
-use std::io::{Write, Read};
 
-use crate::util::types::{Value, Volume};
-use crate::economy::entity::{Producer, Consumer};
+use crate::economy::entity::{Consumer, Producer};
 use crate::economy::function::Function;
 use crate::economy::geography::{City, CityId, Connection};
-use crate::economy::simulation::{SimulationBuilder, Simulation};
+use crate::economy::simulation::{Simulation, SimulationBuilder};
+use crate::util::types::{Value, Volume};
 
 pub trait Writer {
     fn to_file(fd: &File, data: &Self) -> ();
@@ -16,15 +16,15 @@ pub trait Writer {
 
 impl Writer for Simulation {
     fn to_file(mut fd: &File, data: &Simulation) -> () {
-        fd.write("RESULTS\n\n".as_bytes()).expect("Error in write");
+        fd.write_all("RESULTS\n\n".as_bytes())
+            .expect("Error in write");
         let prices = data.market.get_prices();
         for (city_id, price) in prices {
-            let record: String = 
-                data.market.get_geography().cities[city_id].name.clone() +
-                ": " +
-                &price.to_string() +
-                "\n";
-            fd.write(record.as_bytes()).expect("Error in write");
+            let record: String = data.market.get_geography().cities[city_id].name.clone()
+                + ": "
+                + &price.to_string()
+                + "\n";
+            fd.write_all(record.as_bytes()).expect("Error in write");
         }
     }
 }
@@ -141,7 +141,7 @@ impl Reader for Simulation {
         }
 
         let mut simulation: Simulation = simulation_builder.build();
-        
+
         let producers_header: String = Reader::from_file(fd);
         if producers_header != "Producers:" {
             eprintln!("Producers not found");

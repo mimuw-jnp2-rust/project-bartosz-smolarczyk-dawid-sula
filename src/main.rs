@@ -1,11 +1,11 @@
 mod economy;
 mod util;
 
-use std::path::Path;
 use std::fs::File;
+use std::path::Path;
 
 use crate::economy::simulation::Simulation;
-use crate::util::files::{Writer, Reader};
+use crate::util::files::{Reader, Writer};
 
 fn main() {
     /* get command line arguments from user */
@@ -16,14 +16,14 @@ fn main() {
     }
 
     /* create or/and open the IO files */
-    let input_path  = Path::new(&args[1]);
+    let input_path = Path::new(&args[1]);
     let output_path = Path::new(&args[2]);
-    
+
     let input_file = match File::open(&input_path) {
         Err(why) => {
             eprintln!("could not open {}: {}", input_path.display(), why);
             std::process::exit(1);
-        },
+        }
         Ok(file) => file,
     };
 
@@ -31,7 +31,7 @@ fn main() {
         Err(why) => {
             eprintln!("could not create {}: {}", output_path.display(), why);
             std::process::exit(1);
-        },
+        }
         Ok(file) => file,
     };
 
@@ -40,7 +40,7 @@ fn main() {
 
     /* perform the simulation */
     let prices = simulation.calculate_prices();
-    
+
     /* write the new prices to output_file */
     Writer::to_file(&output_file, &simulation);
 }
