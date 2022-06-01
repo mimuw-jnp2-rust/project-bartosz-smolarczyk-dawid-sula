@@ -1,9 +1,3 @@
-//! Utilities
-//! 
-//! Collection of everything used in program that is not specific to 
-//! this programs function.
+pub mod types;
 
-
-mod data_structure;
-
-mod algorithm;
+pub mod files;

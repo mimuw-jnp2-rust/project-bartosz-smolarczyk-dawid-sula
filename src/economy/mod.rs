@@ -1,12 +1,14 @@
 //! Market simulation tools
-//! 
-//! Module conatians elements used to represent economy and tools to analize 
+//!
+//! Module conatians elements used to represent economy and tools to analize
 //! its behaviour.
 
-mod function;
+pub mod function;
 
-mod entity;
+pub mod entity;
 
-mod geography;
+pub mod geography;
 
-mod market;
+pub mod market;
+
+pub mod simulation;

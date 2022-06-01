@@ -1,0 +1,26 @@
+GEOGRAPHY
+Cities: 2
+0 Warsaw
+1 Cracow
+
+Connections: 1
+0 1 10
+
+ECONOMY
+Prices: 0
+
+Producers: 2
+0
+0 5
+11 11 12 13 13
+1
+20 5
+1 1 2 3 3
+
+Consumers: 2
+0
+0 5
+13 13 12 11 13
+1
+20 5
+3 3 2 1 1
