@@ -21,9 +21,11 @@
             "production_costs":{
                 "arg_min":0,
                 "values":[
+                    0,
                     1,
                     2,
-                    3
+                    3,
+                    4
                 ]
             }
         }
@@ -34,9 +36,11 @@
             "usefulness":{
                 "arg_min":0,
                 "values":[
+                    4,
                     3,
                     2,
-                    1
+                    1,
+                    0
                 ]
             }
         }

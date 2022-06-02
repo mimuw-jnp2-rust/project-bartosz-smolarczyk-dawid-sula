@@ -27,7 +27,9 @@ fn main() {
         Ok(file) => file,
     };
 
-    let simulation: Simulation = simulation_builder.build();
+    let mut simulation: Simulation = simulation_builder.build();
 
-    println!("{:#?}", simulation);
+    let prices = simulation.calculate_prices();
+
+    println!("{:#?}", prices);
 }
