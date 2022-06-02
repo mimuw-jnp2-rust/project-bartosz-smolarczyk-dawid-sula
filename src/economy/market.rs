@@ -6,6 +6,14 @@ use crate::economy::geography::Geography;
 use crate::util::types::Value;
 use std::collections::BTreeMap;
 
+use serde::{Serialize, Deserialize};
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CityPrice {
+    pub city: CityId,
+    pub price: Value,
+}
+
 #[derive(Clone, Debug)]
 pub struct CityData {
     demand: Function,

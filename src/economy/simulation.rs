@@ -12,7 +12,7 @@ use crate::economy::geography::City;
 use crate::economy::geography::CityId;
 use crate::economy::geography::Connection;
 use crate::economy::geography::Geography;
-use crate::economy::market::Market;
+use crate::economy::market::{CityPrice, Market};
 use crate::util::types::Value;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -20,7 +20,7 @@ pub struct SimulationBuilder {
     turns: usize,
     cities: Vec<City>,
     connections: Vec<Connection>,
-    prices: BTreeMap<CityId, Value>,
+    initial_prices: Vec<CityPrice>,
     producers: Vec<Producer>,
     consumers: Vec<Consumer>,
 }
@@ -31,7 +31,7 @@ impl SimulationBuilder {
             turns: 0,
             cities: vec![],
             connections: vec![],
-            prices: BTreeMap::new(),
+            initial_prices: vec![],
             producers: vec![],
             consumers: vec![],
         }
@@ -54,8 +54,8 @@ impl SimulationBuilder {
         }
 
         let mut simulation = Simulation::new(self.turns, geography);
-        for (city_id, price) in self.prices {
-            simulation.change_price(city_id, price);
+        for init in self.initial_prices {
+            simulation.change_price(init.city, init.price);
         }
         for producer in self.producers {
             simulation.add_producer(producer);
