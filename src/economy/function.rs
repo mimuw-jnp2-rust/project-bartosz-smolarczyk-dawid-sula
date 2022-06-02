@@ -5,7 +5,9 @@ use crate::util::types::Volume;
 use std::cmp::max;
 use std::cmp::min;
 
-#[derive(Clone, Debug)]
+use serde::Deserialize;
+
+#[derive(Deserialize, Clone, Debug)]
 pub struct Function {
     arg_min: Value,
     values: Vec<Volume>,
