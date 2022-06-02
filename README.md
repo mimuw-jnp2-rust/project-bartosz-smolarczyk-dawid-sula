@@ -33,7 +33,7 @@ Część druga: równoległość podczas obliczania wyniku.
     - automatyczna serializacja i deserializacja plików formatu ```JSON``` wykorzystywanych w projekcie
 - plotters:
     - tworzenie wykresu przedstawiającego kształtowanie się cen w miarę przebiegu symulacji
-    - w razie błędu kompilacji z powodu braku pakietu freetype2 należy go doinstalować:
+    - w razie błędu kompilacji z powodu braku pakietu freetype2 należy go zainstalować poleceniem:
     
         ```
         apt-get install cmake libfreetype6-dev libfontconfig1-dev xclip
