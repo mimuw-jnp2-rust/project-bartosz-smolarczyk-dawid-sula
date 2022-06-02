@@ -4,7 +4,7 @@ use std::error::Error;
 use std::io::BufReader;
 use std::collections::BTreeMap;
 
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
 
 use crate::economy::entity::Consumer;
 use crate::economy::entity::Producer;
@@ -15,7 +15,7 @@ use crate::economy::geography::Geography;
 use crate::economy::market::Market;
 use crate::util::types::Value;
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct SimulationBuilder {
     turns: usize,
     cities: Vec<City>,

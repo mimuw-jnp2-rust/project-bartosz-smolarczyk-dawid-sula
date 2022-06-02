@@ -27,20 +27,7 @@ fn main() {
         Ok(file) => file,
     };
 
-    // let output_file = match File::create(&output_path) {
-    //     Err(why) => {
-    //         eprintln!("could not create {}: {}", output_path.display(), why);
-    //         std::process::exit(1);
-    //     }
-    //     Ok(file) => file,
-    // };
+    let simulation: Simulation = simulation_builder.build();
 
-    /* read the input_file's content preparing the simulation */
-    // let mut simulation: Simulation = Reader::from_file(&input_file);
-
-    /* perform the simulation */
-    // let prices = simulation.calculate_prices();
-
-    /* write the new prices to output_file */
-    // Writer::to_file(&output_file, &simulation);
+    println!("{:#?}", simulation);
 }

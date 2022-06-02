@@ -2,9 +2,9 @@ use crate::economy::function::Function;
 use crate::economy::geography::CityId;
 use crate::economy::market::Market;
 
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Producer {
     city: CityId,
     production_costs: Function,
@@ -31,7 +31,7 @@ impl Producer {
     }
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Consumer {
     city: CityId,
     usefulness: Function,
