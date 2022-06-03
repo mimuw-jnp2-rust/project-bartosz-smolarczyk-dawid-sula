@@ -1,7 +1,6 @@
 mod economy;
 mod util;
 
-use std::fs::File;
 use std::path::Path;
 
 use crate::economy::simulation::{SimulationBuilder, Simulation};
@@ -29,7 +28,7 @@ fn main() {
 
     let mut simulation: Simulation = simulation_builder.build();
 
-    let prices = simulation.calculate_prices();
+    let prices = simulation.run();
 
     println!("{:#?}", prices);
 }

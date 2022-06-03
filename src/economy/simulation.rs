@@ -86,21 +86,21 @@ impl Simulation {
         }
     }
 
-    pub fn change_price(&mut self, city_id: CityId, price: Value) {
+    fn change_price(&mut self, city_id: CityId, price: Value) {
         self.market.change_price(&city_id, &price);
     }
 
-    pub fn add_producer(&mut self, producer: Producer) {
+    fn add_producer(&mut self, producer: Producer) {
         self.market.add_producer(&producer);
         self.producers.push(producer)
     }
 
-    pub fn add_consumer(&mut self, consumer: Consumer) {
+    fn add_consumer(&mut self, consumer: Consumer) {
         self.market.add_consumer(&consumer);
         self.consumers.push(consumer)
     }
 
-    fn simulate_round(&mut self) {
+    fn simulate_turn(&mut self) {
         self.market.update_prices();
         for prod in &mut self.producers {
             prod.update(&mut self.market)
@@ -110,8 +110,33 @@ impl Simulation {
         }
     }
 
-    pub fn calculate_prices(&mut self) -> &BTreeMap<CityId, Value> {
-        self.simulate_round();
-        self.market.get_prices()
+    pub fn run(&mut self) -> SimulationResult {
+        let mut result = SimulationResult::new(self);
+        for _ in 0..self.turns {
+            self.simulate_turn();
+            for (city_id, price) in self.market.get_prices() {
+                let name = self.market.get_geography().get_cities().get(*city_id).unwrap().name.clone();
+                result.prices.get_mut(&name).unwrap().push(*price);
+            }
+        }
+        result
+    }
+}
+
+#[derive(Debug)]
+pub struct SimulationResult {
+    prices: BTreeMap<String, Vec<Value>>,
+}
+
+impl SimulationResult {
+    fn new(simulation: &Simulation) -> SimulationResult {
+        let mut initial_prices = BTreeMap::new();
+        for city in simulation.market.get_geography().get_cities() {
+            let price = *simulation.market.get_prices().get(&city.id).unwrap();
+            initial_prices.insert(city.name.clone(), vec![price]);
+        }
+        SimulationResult {
+            prices: initial_prices,
+        }
     }
 }

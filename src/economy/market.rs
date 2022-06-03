@@ -14,6 +14,15 @@ pub struct CityPrice {
     pub price: Value,
 }
 
+impl CityPrice {
+    fn new(city: CityId, price: Value) -> CityPrice {
+        CityPrice {
+            city,
+            price,
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct CityData {
     demand: Function,
