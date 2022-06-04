@@ -3,6 +3,8 @@
 //! Module conatians elements used to represent economy and tools to analize
 //! its behaviour.
 
+pub mod types;
+
 pub mod function;
 
 pub mod entity;

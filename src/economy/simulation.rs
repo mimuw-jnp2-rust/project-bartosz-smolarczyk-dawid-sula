@@ -5,8 +5,9 @@ use crate::economy::geography::CityId;
 use crate::economy::geography::Connection;
 use crate::economy::geography::Geography;
 use crate::economy::market::Market;
-use crate::util::types::Value;
 use std::collections::BTreeMap;
+
+use super::types::Price;
 
 pub struct SimulationBuilder {
     geography: Geography,
@@ -48,10 +49,6 @@ impl Simulation {
         }
     }
 
-    pub fn change_price(&mut self, city_id: CityId, price: Value) {
-        self.market.change_price(&city_id, &price);
-    }
-
     pub fn add_producer(&mut self, producer: Producer) {
         self.market.add_producer(&producer);
         self.producers.push(producer)
@@ -72,7 +69,7 @@ impl Simulation {
         }
     }
 
-    pub fn calculate_prices(&mut self) -> &BTreeMap<CityId, Value> {
+    pub fn calculate_prices(&mut self) -> BTreeMap<CityId, Option<Price>> {
         self.simulate_round();
         self.market.get_prices()
     }

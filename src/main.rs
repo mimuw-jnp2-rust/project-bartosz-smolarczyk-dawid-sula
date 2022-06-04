@@ -5,7 +5,6 @@ use std::fs::File;
 use std::path::Path;
 
 use crate::economy::simulation::Simulation;
-use crate::util::files::{Reader, Writer};
 
 fn main() {
     /* get command line arguments from user */
@@ -34,13 +33,4 @@ fn main() {
         }
         Ok(file) => file,
     };
-
-    /* read the input_file's content preparing the simulation */
-    let mut simulation: Simulation = Reader::from_file(&input_file);
-
-    /* perform the simulation */
-    let prices = simulation.calculate_prices();
-
-    /* write the new prices to output_file */
-    Writer::to_file(&output_file, &simulation);
 }

@@ -1,3 +1,2 @@
-pub mod types;
-
-pub mod files;
+#[cfg(test)]
+pub mod testing;

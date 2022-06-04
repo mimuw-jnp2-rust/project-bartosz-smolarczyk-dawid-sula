@@ -1,15 +1,16 @@
-use crate::economy::function::Function;
+use crate::economy::function::Demand;
+use crate::economy::function::Supply;
 use crate::economy::geography::CityId;
 use crate::economy::market::Market;
 
 #[derive(Clone, Debug)]
 pub struct Producer {
     city: CityId,
-    production_costs: Function,
+    production_costs: Supply,
 }
 
 impl Producer {
-    pub fn new(city: CityId, production_costs: Function) -> Producer {
+    pub fn new(city: CityId, production_costs: Supply) -> Producer {
         Producer {
             city,
             production_costs,
@@ -20,7 +21,7 @@ impl Producer {
         self.city
     }
 
-    pub fn get_supply(&self) -> &Function {
+    pub fn get_supply(&self) -> &Supply {
         &self.production_costs
     }
 
@@ -32,11 +33,11 @@ impl Producer {
 #[derive(Clone, Debug)]
 pub struct Consumer {
     city: CityId,
-    usefulness: Function,
+    usefulness: Demand,
 }
 
 impl Consumer {
-    pub fn new(city: CityId, usefulness: Function) -> Consumer {
+    pub fn new(city: CityId, usefulness: Demand) -> Consumer {
         Consumer { city, usefulness }
     }
 
@@ -44,7 +45,7 @@ impl Consumer {
         self.city
     }
 
-    pub fn get_demand(&self) -> &Function {
+    pub fn get_demand(&self) -> &Demand {
         &self.usefulness
     }
 

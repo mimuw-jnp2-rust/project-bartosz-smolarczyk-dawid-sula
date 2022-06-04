@@ -1,6 +1,6 @@
-use crate::util::types::Value;
-use crate::util::types::Volume;
 use std::collections::BTreeMap;
+
+use super::types::Price;
 
 pub type CityId = usize;
 
@@ -28,11 +28,11 @@ impl City {
 pub struct Connection {
     id_from: CityId,
     id_to: CityId,
-    cost: Value,
+    cost: Price,
 }
 
 impl Connection {
-    pub fn new(id_from: CityId, id_to: CityId, cost: Value) -> Connection {
+    pub fn new(id_from: CityId, id_to: CityId, cost: Price) -> Connection {
         Connection {
             id_from,
             id_to,
@@ -48,7 +48,7 @@ impl Connection {
         self.id_to
     }
 
-    pub fn get_cost(&self) -> Value {
+    pub fn get_cost(&self) -> Price {
         self.cost
     }
 }
