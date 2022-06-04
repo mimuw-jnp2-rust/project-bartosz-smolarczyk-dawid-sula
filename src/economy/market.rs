@@ -244,19 +244,25 @@ impl Market {
         let group_lists = self.calculate_groups();
 
         group_lists.par_iter().for_each(|group| {
-            let mut demand = Demand::zero();
-            let mut supply = Supply::zero();
-
-            for (city_id, price_diff) in group.1 {
-                let city = &self.cities.get(city_id).unwrap();
-                let mut city_demand = city.get_demand().clone();
-                let mut city_supply = city.get_supply().clone();
-                city_demand.shift_left(*price_diff);
-                city_supply.shift_left(*price_diff);
-
-                demand.add_function(&city_demand);
-                supply.add_function(&city_supply);
-            }
+            let (demand, supply) = group
+                .1
+                .par_iter()
+                .map(|(city_id, price_diff)| {
+                    let city = &self.cities.get(city_id).unwrap();
+                    let mut city_demand = city.get_demand().clone();
+                    let mut city_supply = city.get_supply().clone();
+                    city_demand.shift_left(*price_diff);
+                    city_supply.shift_left(*price_diff);
+                    (city_demand, city_supply)
+                })
+                .reduce(
+                    || (Demand::zero(), Supply::zero()),
+                    |(mut demand_1, mut supply_1), (demand_2, supply_2)| {
+                        demand_1.add_function(&demand_2);
+                        supply_1.add_function(&supply_2);
+                        (demand_1, supply_1)
+                    },
+                );
 
             let state_global = demand.intersect(&supply);
 
