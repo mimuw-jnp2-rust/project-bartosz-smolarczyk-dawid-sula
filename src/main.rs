@@ -1,10 +1,9 @@
 mod economy;
 mod util;
 
-use std::fs::File;
 use std::path::Path;
 
-use crate::economy::simulation::Simulation;
+use crate::economy::simulation::{SimulationBuilder, Simulation};
 
 fn main() {
     /* get command line arguments from user */
@@ -14,11 +13,12 @@ fn main() {
         std::process::exit(1);
     }
 
-    /* create or/and open the IO files */
+    /* convert input strings into file paths */
     let input_path = Path::new(&args[1]);
     let output_path = Path::new(&args[2]);
 
-    let input_file = match File::open(&input_path) {
+    /* load the simulation */
+    let simulation_builder = match SimulationBuilder::read_from_file(&input_path) {
         Err(why) => {
             eprintln!("could not open {}: {}", input_path.display(), why);
             std::process::exit(1);

@@ -1,10 +1,11 @@
 use std::collections::BTreeMap;
 
 use super::types::Price;
+use serde::{Serialize, Deserialize};
 
 pub type CityId = usize;
 
-#[derive(Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct City {
     pub id: CityId,
     pub name: String,
@@ -24,7 +25,7 @@ impl City {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Connection {
     id_from: CityId,
     id_to: CityId,

@@ -27,4 +27,14 @@ Część pierwsza: zaimplementowanie podstawowych funkcjonalności.
 Część druga: równoległość podczas obliczania wyniku.
 
 ## Biblioteki
-- todo
+- serde:
+    - obsługa serializacji i deserializacji plików
+- serde_json:
+    - automatyczna serializacja i deserializacja plików formatu ```JSON``` wykorzystywanych w projekcie
+- plotters:
+    - tworzenie wykresu przedstawiającego kształtowanie się cen w miarę przebiegu symulacji
+    - w razie błędu kompilacji z powodu braku pakietu freetype2 należy go zainstalować poleceniem:
+    
+        ```
+        apt-get install cmake libfreetype6-dev libfontconfig1-dev xclip
+        ```
