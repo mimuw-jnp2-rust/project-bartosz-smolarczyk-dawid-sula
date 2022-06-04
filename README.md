@@ -38,3 +38,7 @@ Część druga: równoległość podczas obliczania wyniku.
         ```
         apt-get install cmake libfreetype6-dev libfontconfig1-dev xclip
         ```
+- line_intersection, geo, ordered-float:
+    - implementacja reprezentacji funkcji, w szczególności znajdywanie ich przecięcia
+- rayon, dashmap:
+    - zrównoleglanie obliczeń podczas wyliczania cen i przetwarzania funkcji
