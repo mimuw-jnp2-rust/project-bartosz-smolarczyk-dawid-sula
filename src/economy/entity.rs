@@ -27,8 +27,9 @@ impl Producer {
         &self.production_costs
     }
 
-    pub fn update(&mut self, market: &mut Market) {
-        // TODO: some sort of simple update.
+    #[allow(dead_code)]
+    pub fn update(&mut self, _market: &mut Market) {
+        // Place left for possible extension.
     }
 }
 
@@ -51,5 +52,8 @@ impl Consumer {
         &self.usefulness
     }
 
-    pub fn update(&mut self, market: &mut Market) {}
+    #[allow(dead_code)]
+    pub fn update(&mut self, _market: &mut Market) {
+        // Place left for possible extension.
+    }
 }

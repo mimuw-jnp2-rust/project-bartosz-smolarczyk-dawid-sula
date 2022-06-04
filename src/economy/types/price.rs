@@ -31,7 +31,7 @@ impl Price {
         }
     }
 
-    pub fn from_notnan(value: NotNan<f64>) -> Price {
+    pub fn from_notnan(value: NotNan<InnerValue>) -> Price {
         Price { value }
     }
 
@@ -41,14 +41,6 @@ impl Price {
 
     pub fn notnan(&self) -> NotNan<InnerValue> {
         self.value
-    }
-
-    fn eq(&self, other: &Self) -> bool {
-        self.notnan() == other.notnan()
-    }
-
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.notnan().cmp(&other.notnan())
     }
 
     pub fn abs(&self) -> Self {
@@ -118,7 +110,7 @@ impl Div<InnerValue> for Price {
 
 impl PartialEq for Price {
     fn eq(&self, other: &Self) -> bool {
-        self.eq(other)
+        self.notnan() == other.notnan()
     }
 }
 
@@ -132,7 +124,7 @@ impl PartialOrd for Price {
 
 impl Ord for Price {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.cmp(other)
+        self.notnan().cmp(&other.notnan())
     }
 }
 

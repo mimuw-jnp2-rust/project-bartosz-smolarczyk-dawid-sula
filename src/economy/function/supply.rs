@@ -15,16 +15,18 @@ pub struct Supply {
 
 impl Supply {
     pub fn zero() -> Supply {
-        let function = Function::zero();
-        Supply { function }
+        Supply {
+            function: Function::zero(),
+        }
     }
 
     pub fn new<I>(values: I) -> Supply
     where
         I: Iterator<Item = (ArgT, ValueT)>,
     {
-        let function = Function::new(values);
-        Supply { function }
+        Supply {
+            function: Function::new(values),
+        }
     }
 
     pub fn function(&self) -> &Function {
@@ -41,28 +43,28 @@ impl FunctionAbstract for Supply {
         self.function.value(arg)
     }
 
-    fn add_value(&mut self, value: ValueT) -> &Self {
+    fn add_value(&mut self, value: ValueT) -> &mut Self {
         self.function.add_value(value);
         self
     }
 
-    fn substract_value(&mut self, value: ValueT) -> &Self {
+    fn substract_value(&mut self, value: ValueT) -> &mut Self {
         self.function.substract_value(value);
         self
     }
-    fn add_function(&mut self, fun: &Self) -> &Self {
+    fn add_function(&mut self, fun: &Self) -> &mut Self {
         self.function.add_function(fun.function());
         self
     }
-    fn substract_function(&mut self, fun: &Self) -> &Self {
+    fn substract_function(&mut self, fun: &Self) -> &mut Self {
         self.function.substract_function(fun.function());
         self
     }
-    fn shift_right(&mut self, arg: ArgT) -> &Self {
+    fn shift_right(&mut self, arg: ArgT) -> &mut Self {
         self.function.shift_right(arg);
         self
     }
-    fn shift_left(&mut self, arg: ArgT) -> &Self {
+    fn shift_left(&mut self, arg: ArgT) -> &mut Self {
         self.function.shift_left(arg);
         self
     }

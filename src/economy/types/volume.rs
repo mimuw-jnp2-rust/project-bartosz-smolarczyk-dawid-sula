@@ -31,7 +31,7 @@ impl Volume {
         }
     }
 
-    pub fn from_notnan(value: NotNan<f64>) -> Volume {
+    pub fn from_notnan(value: NotNan<InnerValue>) -> Volume {
         Volume { value }
     }
 
@@ -41,14 +41,6 @@ impl Volume {
 
     pub fn notnan(&self) -> NotNan<InnerValue> {
         self.value
-    }
-
-    fn eq(&self, other: &Self) -> bool {
-        self.notnan() == other.notnan()
-    }
-
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.notnan().cmp(&other.notnan())
     }
 
     pub fn abs(&self) -> Self {
@@ -102,7 +94,7 @@ impl Neg for Volume {
 
 impl PartialEq for Volume {
     fn eq(&self, other: &Self) -> bool {
-        self.eq(other)
+        self.notnan().eq(&other.notnan())
     }
 }
 
@@ -116,7 +108,7 @@ impl PartialOrd for Volume {
 
 impl Ord for Volume {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.cmp(other)
+        self.notnan().cmp(&other.notnan())
     }
 }
 

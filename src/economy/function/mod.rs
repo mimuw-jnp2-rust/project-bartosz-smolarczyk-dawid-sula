@@ -29,14 +29,14 @@ pub type ValueT = crate::economy::types::Volume;
 pub trait FunctionAbstract {
     fn value(&self, arg: ArgT) -> ValueT;
 
-    fn add_value(&mut self, value: ValueT) -> &Self;
-    fn substract_value(&mut self, value: ValueT) -> &Self;
+    fn add_value(&mut self, value: ValueT) -> &mut Self;
+    fn substract_value(&mut self, value: ValueT) -> &mut Self;
 
-    fn add_function(&mut self, function: &Self) -> &Self;
-    fn substract_function(&mut self, function: &Self) -> &Self;
+    fn add_function(&mut self, function: &Self) -> &mut Self;
+    fn substract_function(&mut self, function: &Self) -> &mut Self;
 
-    fn shift_right(&mut self, shift: ArgT) -> &Self;
-    fn shift_left(&mut self, shift: ArgT) -> &Self;
+    fn shift_right(&mut self, shift: ArgT) -> &mut Self;
+    fn shift_left(&mut self, shift: ArgT) -> &mut Self;
 }
 
 #[derive(Clone, Debug)]
@@ -146,7 +146,7 @@ impl FunctionAbstract for Function {
         }
     }
 
-    fn add_value(&mut self, value: ValueT) -> &Self {
+    fn add_value(&mut self, value: ValueT) -> &mut Self {
         self.min_value += value;
         self.max_value += value;
         self.intervals = self
@@ -157,11 +157,11 @@ impl FunctionAbstract for Function {
         self
     }
 
-    fn substract_value(&mut self, value: ValueT) -> &Self {
+    fn substract_value(&mut self, value: ValueT) -> &mut Self {
         self.add_value(-value)
     }
 
-    fn add_function(&mut self, function: &Self) -> &Self {
+    fn add_function(&mut self, function: &Self) -> &mut Self {
         let args_combined = Function::combine_data_points(self, function);
         let intervals: BTreeMap<ArgT, ValueT> = args_combined
             .into_iter()
@@ -179,7 +179,7 @@ impl FunctionAbstract for Function {
         self
     }
 
-    fn substract_function(&mut self, function: &Self) -> &Self {
+    fn substract_function(&mut self, function: &Self) -> &mut Self {
         let args_combined = Function::combine_data_points(self, function);
         let intervals: BTreeMap<ArgT, ValueT> = args_combined
             .into_iter()
@@ -197,7 +197,7 @@ impl FunctionAbstract for Function {
         self
     }
 
-    fn shift_right(&mut self, shift: ArgT) -> &Self {
+    fn shift_right(&mut self, shift: ArgT) -> &mut Self {
         self.min_arg += shift;
         self.max_arg += shift;
         self.intervals = self
@@ -208,7 +208,7 @@ impl FunctionAbstract for Function {
         self
     }
 
-    fn shift_left(&mut self, shift: ArgT) -> &Self {
+    fn shift_left(&mut self, shift: ArgT) -> &mut Self {
         self.shift_right(-shift)
     }
 }
