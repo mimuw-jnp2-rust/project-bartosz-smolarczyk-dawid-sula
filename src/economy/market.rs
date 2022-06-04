@@ -247,7 +247,7 @@ impl Market {
         group_lists
     }
 
-    pub fn update_prices(&mut self) {
+    fn update_prices(&mut self) {
         let group_lists = self.calculate_groups();
 
         group_lists.par_iter().for_each(|group| {

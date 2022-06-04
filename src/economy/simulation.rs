@@ -99,7 +99,7 @@ impl Simulation {
     }
 
     fn simulate_turn(&mut self) {
-        self.market.update_prices();
+        self.market.simulate(1);
         for prod in &mut self.producers {
             prod.update(&mut self.market)
         }
