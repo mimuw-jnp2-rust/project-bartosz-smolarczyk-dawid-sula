@@ -5,7 +5,9 @@ use crate::economy::function::FunctionAbstract;
 use crate::economy::function::Supply;
 use crate::economy::geography::CityId;
 use crate::economy::geography::Geography;
+use dashmap::DashMap;
 use ordered_float::NotNan;
+use rayon::prelude::*;
 use std::collections::BTreeMap;
 
 use super::types::Price;
@@ -95,12 +97,12 @@ impl CityData {
 #[derive(Debug)]
 pub struct Market {
     geography: Geography,
-    cities: BTreeMap<CityId, CityData>,
+    cities: DashMap<CityId, CityData>,
 }
 
 impl Market {
     pub fn new(geography: Geography) -> Market {
-        let cities: BTreeMap<CityId, CityData> = geography
+        let cities: DashMap<CityId, CityData> = geography
             .get_cities()
             .into_iter()
             .map(|x| (x.get_id(), CityData::new()))
@@ -143,21 +145,21 @@ impl Market {
     pub fn get_prices(&self) -> BTreeMap<CityId, Option<Price>> {
         self.cities
             .iter()
-            .map(|x| (*x.0, x.1.get_price()))
+            .map(|x| (*x.key(), x.get_price()))
             .collect()
     }
 
     pub fn get_demand_volumes(&self) -> BTreeMap<CityId, Option<Volume>> {
         self.cities
             .iter()
-            .map(|x| (*x.0, x.1.get_demand_volume()))
+            .map(|x| (*x.key(), x.get_demand_volume()))
             .collect()
     }
 
     pub fn get_supply_volumes(&self) -> BTreeMap<CityId, Option<Volume>> {
         self.cities
             .iter()
-            .map(|x| (*x.0, x.1.get_supply_volume()))
+            .map(|x| (*x.key(), x.get_supply_volume()))
             .collect()
     }
 
@@ -179,35 +181,33 @@ impl Market {
             let id_to = conn.get_to_id();
             let cost = conn.get_cost();
 
-            let (price_from, price_to) =
-                match (self.cities[&id_from].state, self.cities[&id_to].state) {
-                    (
-                        MarketState::Equilibrium(price_from, _, _),
-                        MarketState::Equilibrium(price_to, _, _),
-                    ) => (price_from, price_to),
-                    (MarketState::OverSupply, MarketState::Equilibrium(price_to, _, _)) => {
-                        (Price::min(), price_to)
-                    }
-                    (MarketState::UnderSupply, MarketState::Equilibrium(price_to, _, _)) => {
-                        (Price::max(), price_to)
-                    }
-                    (MarketState::Equilibrium(price_from, _, _), MarketState::OverSupply) => {
-                        (price_from, Price::min())
-                    }
-                    (MarketState::Equilibrium(price_from, _, _), MarketState::UnderSupply) => {
-                        (price_from, Price::max())
-                    }
-                    (MarketState::UnderSupply, MarketState::OverSupply) => {
-                        (Price::max(), Price::min())
-                    }
-                    (MarketState::OverSupply, MarketState::UnderSupply) => {
-                        (Price::min(), Price::max())
-                    }
-                    _ => {
-                        // Initiates identical values so that they will be only connected when transport between them is free.
-                        (Price::new(0.), Price::new(0.))
-                    }
-                };
+            let (price_from, price_to) = match (
+                self.cities.get(&id_from).unwrap().state,
+                self.cities.get(&id_to).unwrap().state,
+            ) {
+                (
+                    MarketState::Equilibrium(price_from, _, _),
+                    MarketState::Equilibrium(price_to, _, _),
+                ) => (price_from, price_to),
+                (MarketState::OverSupply, MarketState::Equilibrium(price_to, _, _)) => {
+                    (Price::min(), price_to)
+                }
+                (MarketState::UnderSupply, MarketState::Equilibrium(price_to, _, _)) => {
+                    (Price::max(), price_to)
+                }
+                (MarketState::Equilibrium(price_from, _, _), MarketState::OverSupply) => {
+                    (price_from, Price::min())
+                }
+                (MarketState::Equilibrium(price_from, _, _), MarketState::UnderSupply) => {
+                    (price_from, Price::max())
+                }
+                (MarketState::UnderSupply, MarketState::OverSupply) => (Price::max(), Price::min()),
+                (MarketState::OverSupply, MarketState::UnderSupply) => (Price::min(), Price::max()),
+                _ => {
+                    // Initiates identical values so that they will be only connected when transport between them is free.
+                    (Price::new(0.), Price::new(0.))
+                }
+            };
 
             if price_from - price_to >= cost || price_to - price_from >= cost {
                 self.calculate_groups_dfs(
@@ -223,13 +223,14 @@ impl Market {
     fn calculate_groups(&self) -> BTreeMap<CityId, Vec<(CityId, Price)>> {
         // Map id -> (group_id, price_compared_to_groups_base).
         let mut groups: BTreeMap<CityId, (CityId, Price)> = BTreeMap::new();
-        for i in self.cities.keys() {
+        for entry in &self.cities {
+            let i = entry.key();
             self.calculate_groups_dfs(*i, *i, Price::new(0.), &mut groups);
         }
 
         // Map group_id -> [(id, price_compared_to_groups_base)].
         let mut group_lists: BTreeMap<CityId, Vec<(CityId, Price)>> =
-            self.cities.keys().map(|x| (*x, vec![])).collect();
+            self.cities.iter().map(|x| (*x.key(), vec![])).collect();
         for city in groups {
             group_lists
                 .get_mut(&city.1 .0)
@@ -242,12 +243,12 @@ impl Market {
     pub fn update_prices(&mut self) {
         let group_lists = self.calculate_groups();
 
-        for group in group_lists {
+        group_lists.par_iter().for_each(|group| {
             let mut demand = Demand::zero();
             let mut supply = Supply::zero();
 
-            for (city_id, price_diff) in &group.1 {
-                let city = &self.cities[city_id];
+            for (city_id, price_diff) in group.1 {
+                let city = &self.cities.get(city_id).unwrap();
                 let mut city_demand = city.get_demand().clone();
                 let mut city_supply = city.get_supply().clone();
                 city_demand.shift_left(*price_diff);
@@ -259,8 +260,8 @@ impl Market {
 
             let state_global = demand.intersect(&supply);
 
-            for (city_id, price_diff) in &group.1 {
-                let city_state = self.cities.get_mut(city_id).unwrap();
+            for (city_id, price_diff) in group.1 {
+                let mut city_state = self.cities.get_mut(city_id).unwrap();
                 let new_state = match state_global {
                     MarketState::Equilibrium(price, _, _) => {
                         let price_local = price + *price_diff;
@@ -272,9 +273,7 @@ impl Market {
                 };
                 city_state.set_state(new_state);
             }
-
-            let price = demand.intersect(&supply);
-        }
+        });
     }
 
     pub fn simulate(&mut self, tours: u32) {
@@ -284,9 +283,9 @@ impl Market {
     }
 
     pub fn reset_prices(&mut self) {
-        for city in &mut self.cities {
-            city.1.set_state(MarketState::Undefined)
-        }
+        self.cities
+            .iter_mut()
+            .for_each(|mut city| city.set_state(MarketState::Undefined));
     }
 }
 
@@ -311,13 +310,14 @@ pub mod tests {
     use crate::util::testing::test_eq_arg;
     use crate::util::testing::test_eq_value;
 
+    use dashmap::DashMap;
     use ordered_float::NotNan;
     use std::collections::BTreeMap;
 
     fn generateCities(
         geography: &Geography,
         prices_vec: Vec<(CityId, InnerValue)>,
-    ) -> BTreeMap<CityId, CityData> {
+    ) -> DashMap<CityId, CityData> {
         let prices: BTreeMap<CityId, InnerValue> = prices_vec.into_iter().collect();
         geography
             .cities
