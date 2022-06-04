@@ -115,8 +115,8 @@ impl Simulation {
         for _ in 0..self.turns {
             self.simulate_turn();
             for (city_id, price) in self.market.get_prices() {
-                let name = self.market.get_geography().get_cities().get(*city_id).unwrap().name.clone();
-                result.prices.get_mut(&name).unwrap().push(*price);
+                let city = *self.market.get_geography().get_cities().get(*city_id).unwrap();
+                result.prices.get_mut(&city.name).unwrap().push(*price);
             }
         }
         result
