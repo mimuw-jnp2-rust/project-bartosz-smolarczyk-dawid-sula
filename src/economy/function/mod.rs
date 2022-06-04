@@ -216,7 +216,8 @@ impl FunctionAbstract for Function {
 impl Serialize for Function {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        S: serde::Serializer {
+        S: serde::Serializer,
+    {
         todo!()
     }
 }
@@ -224,7 +225,8 @@ impl Serialize for Function {
 impl<'de> Deserialize<'de> for Function {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
-        D: serde::Deserializer<'de> {
+        D: serde::Deserializer<'de>,
+    {
         todo!()
     }
 }

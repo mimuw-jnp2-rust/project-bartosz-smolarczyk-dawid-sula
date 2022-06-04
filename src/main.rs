@@ -1,9 +1,9 @@
 mod economy;
 mod util;
 
-use std::{path::Path, fs::File};
+use std::{fs::File, path::Path};
 
-use crate::economy::simulation::{SimulationBuilder, Simulation};
+use crate::economy::simulation::{Simulation, SimulationBuilder};
 
 fn main() {
     /* get command line arguments from user */

@@ -1,7 +1,7 @@
 use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub, SubAssign};
 
 use ordered_float::NotNan;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use super::InnerValue;
 
@@ -139,7 +139,8 @@ impl Ord for Price {
 impl Serialize for Price {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        S: serde::Serializer {
+        S: serde::Serializer,
+    {
         self.float().serialize(serializer)
     }
 }
@@ -147,7 +148,8 @@ impl Serialize for Price {
 impl<'de> Deserialize<'de> for Price {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
-        D: serde::Deserializer<'de> {
-        InnerValue::deserialize(deserializer).map(|x| Price::new(x))
+        D: serde::Deserializer<'de>,
+    {
+        InnerValue::deserialize(deserializer).map(Price::new)
     }
 }

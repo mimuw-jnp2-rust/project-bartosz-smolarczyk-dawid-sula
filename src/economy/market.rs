@@ -101,11 +101,21 @@ pub struct Market {
 }
 
 impl Market {
-    pub fn new(geography: Geography) -> Market {
+    pub fn new(geography: Geography, prices: BTreeMap<CityId, Price>) -> Market {
         let cities: DashMap<CityId, CityData> = geography
             .cities()
             .into_iter()
-            .map(|x| (x.id(), CityData::new()))
+            .map(|x| {
+                (x.id(), {
+                    let mut data = CityData::new();
+                    prices
+                        .get(&x.id())
+                        .map(|x| MarketState::Equilibrium(*x, Volume::zero(), Volume::zero()))
+                        .into_iter()
+                        .for_each(|x| data.set_state(x));
+                    data
+                })
+            })
             .collect();
         Market { geography, cities }
     }
@@ -143,10 +153,7 @@ impl Market {
     }
 
     pub fn prices(&self) -> BTreeMap<CityId, Option<Price>> {
-        self.cities
-            .iter()
-            .map(|x| (*x.key(), x.price()))
-            .collect()
+        self.cities.iter().map(|x| (*x.key(), x.price())).collect()
     }
 
     pub fn demand_volumes(&self) -> BTreeMap<CityId, Option<Volume>> {
@@ -512,7 +519,7 @@ pub mod tests {
             let city_consumption = Consumer::new(0, make_demand(vec![(0., 4.), (4., 0.)]));
             let city_production = Producer::new(0, make_supply(vec![(0., 0.), (4., 4.)]));
 
-            let mut market = Market::new(geography);
+            let mut market = Market::new(geography, BTreeMap::new());
             market.add_consumer(&city_consumption);
             market.add_producer(&city_production);
 
@@ -540,7 +547,7 @@ pub mod tests {
             let city_production =
                 Producer::new(0, make_supply(vec![(0., 0.), (2., 1.), (4., 4.), (6., 6.)]));
 
-            let mut market = Market::new(geography);
+            let mut market = Market::new(geography, BTreeMap::new());
             market.add_consumer(&city_consumption);
             market.add_producer(&city_production);
 
@@ -570,7 +577,7 @@ pub mod tests {
             let city_production =
                 Producer::new(0, make_supply(vec![(0., 1.), (2., 2.), (3., 6.), (5., 8.)]));
 
-            let mut market = Market::new(geography);
+            let mut market = Market::new(geography, BTreeMap::new());
             market.add_consumer(&city_consumption);
             market.add_producer(&city_production);
 
@@ -613,7 +620,7 @@ pub mod tests {
                 make_supply(vec![(6., 0.), (8., 2.), (9., 5.), (10., 6.)]),
             );
 
-            let mut market = Market::new(geography);
+            let mut market = Market::new(geography, BTreeMap::new());
             market.add_consumer(&city_0_consumption);
             market.add_producer(&city_0_production);
             market.add_consumer(&city_1_consumption);
@@ -675,7 +682,7 @@ pub mod tests {
                 make_supply(vec![(5., 9.), (7., 7.), (8., 4.), (9., 2.), (11., 1.)]),
             );
 
-            let mut market_base = Market::new(geography);
+            let mut market_base = Market::new(geography, BTreeMap::new());
             market_base.add_consumer(&city_0_consumption);
             market_base.add_producer(&city_0_production);
             market_base.add_consumer(&city_1_consumption);
@@ -732,7 +739,7 @@ pub mod tests {
                 make_supply(vec![(3., 1.), (6., 3.), (8., 5.), (10., 6.)]),
             );
 
-            let mut market = Market::new(geography);
+            let mut market = Market::new(geography, BTreeMap::new());
             market.add_consumer(&city_0_consumption);
             market.add_producer(&city_0_production);
             market.add_consumer(&city_1_consumption);

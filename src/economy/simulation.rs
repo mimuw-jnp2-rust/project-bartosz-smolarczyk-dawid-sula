@@ -1,10 +1,10 @@
-use std::path::Path;
-use std::fs::File;
-use std::error::Error;
-use std::io::BufReader;
 use std::collections::BTreeMap;
+use std::error::Error;
+use std::fs::File;
+use std::io::BufReader;
+use std::path::Path;
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::economy::entity::Consumer;
 use crate::economy::entity::Producer;
@@ -54,10 +54,11 @@ impl SimulationBuilder {
             geography.add_connection(connection);
         }
 
-        let mut simulation = Simulation::new(self.turns, geography);
-        for init in self.initial_prices {
-            simulation.change_price(init.0, init.1);
-        }
+        let mut simulation = Simulation::new(
+            self.turns,
+            geography,
+            self.initial_prices.into_iter().collect(),
+        );
         for producer in self.producers {
             simulation.add_producer(producer);
         }
@@ -78,17 +79,13 @@ pub struct Simulation {
 }
 
 impl Simulation {
-    fn new(turns: usize, geography: Geography) -> Simulation {
+    fn new(turns: usize, geography: Geography, prices: BTreeMap<CityId, Price>) -> Simulation {
         Simulation {
             turns,
-            market: Market::new(geography),
+            market: Market::new(geography, prices),
             producers: vec![],
             consumers: vec![],
         }
-    }
-
-    fn change_price(&mut self, city_id: CityId, price: Price) {
-        self.market.change_price(&city_id, &price);
     }
 
     fn add_producer(&mut self, producer: Producer) {
@@ -116,7 +113,14 @@ impl Simulation {
         for _ in 0..self.turns {
             self.simulate_turn();
             for (city_id, price) in self.market.prices() {
-                let name = self.market.geography().cities().get(city_id).unwrap().name.clone();
+                let name = self
+                    .market
+                    .geography()
+                    .cities()
+                    .get(city_id)
+                    .unwrap()
+                    .name
+                    .clone();
                 result.prices.get_mut(&name).unwrap().push(price);
             }
         }

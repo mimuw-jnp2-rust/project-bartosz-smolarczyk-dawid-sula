@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use super::types::Price;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 pub type CityId = usize;
 

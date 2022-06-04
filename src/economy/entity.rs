@@ -3,7 +3,7 @@ use crate::economy::function::Supply;
 use crate::economy::geography::CityId;
 use crate::economy::market::Market;
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Producer {
