@@ -37,7 +37,7 @@ impl CityData {
         }
     }
 
-    pub fn get_demand(&self) -> &Demand {
+    pub fn demand(&self) -> &Demand {
         &self.demand
     }
 
@@ -49,7 +49,7 @@ impl CityData {
         self.demand.substract_function(demand);
     }
 
-    pub fn get_supply(&self) -> &Supply {
+    pub fn supply(&self) -> &Supply {
         &self.supply
     }
 
@@ -61,7 +61,7 @@ impl CityData {
         self.supply.substract_function(supply);
     }
 
-    pub fn get_state(&self) -> &MarketState {
+    pub fn state(&self) -> &MarketState {
         &self.state
     }
 
@@ -69,7 +69,7 @@ impl CityData {
         self.state = state;
     }
 
-    pub fn get_price(&self) -> Option<Price> {
+    pub fn price(&self) -> Option<Price> {
         if let MarketState::Equilibrium(price, _, _) = self.state {
             Some(price)
         } else {
@@ -77,7 +77,7 @@ impl CityData {
         }
     }
 
-    pub fn get_demand_volume(&self) -> Option<Volume> {
+    pub fn demand_volume(&self) -> Option<Volume> {
         if let MarketState::Equilibrium(_, volume, _) = self.state {
             Some(volume)
         } else {
@@ -85,7 +85,7 @@ impl CityData {
         }
     }
 
-    pub fn get_supply_volume(&self) -> Option<Volume> {
+    pub fn supply_volume(&self) -> Option<Volume> {
         if let MarketState::Equilibrium(_, _, volume) = self.state {
             Some(volume)
         } else {
@@ -103,63 +103,63 @@ pub struct Market {
 impl Market {
     pub fn new(geography: Geography) -> Market {
         let cities: DashMap<CityId, CityData> = geography
-            .get_cities()
+            .cities()
             .into_iter()
-            .map(|x| (x.get_id(), CityData::new()))
+            .map(|x| (x.id(), CityData::new()))
             .collect();
         Market { geography, cities }
     }
 
-    pub fn get_geography(&self) -> &Geography {
+    pub fn geagraphy(&self) -> &Geography {
         &self.geography
     }
 
     pub fn add_producer(&mut self, prod: &Producer) {
         self.cities
-            .get_mut(&prod.get_city())
+            .get_mut(&prod.city())
             .unwrap()
-            .add_supply(prod.get_supply())
+            .add_supply(prod.supply())
     }
 
     pub fn remove_producer(&mut self, prod: &Producer) {
         self.cities
-            .get_mut(&prod.get_city())
+            .get_mut(&prod.city())
             .unwrap()
-            .substract_supply(prod.get_supply())
+            .substract_supply(prod.supply())
     }
 
     pub fn add_consumer(&mut self, cons: &Consumer) {
         self.cities
-            .get_mut(&cons.get_city())
+            .get_mut(&cons.city())
             .unwrap()
-            .add_demand(cons.get_demand())
+            .add_demand(cons.demand())
     }
 
     pub fn remove_consumer(&mut self, cons: &Consumer) {
         self.cities
-            .get_mut(&cons.get_city())
+            .get_mut(&cons.city())
             .unwrap()
-            .substract_demand(cons.get_demand())
+            .substract_demand(cons.demand())
     }
 
-    pub fn get_prices(&self) -> BTreeMap<CityId, Option<Price>> {
+    pub fn prices(&self) -> BTreeMap<CityId, Option<Price>> {
         self.cities
             .iter()
-            .map(|x| (*x.key(), x.get_price()))
+            .map(|x| (*x.key(), x.price()))
             .collect()
     }
 
-    pub fn get_demand_volumes(&self) -> BTreeMap<CityId, Option<Volume>> {
+    pub fn demand_volumes(&self) -> BTreeMap<CityId, Option<Volume>> {
         self.cities
             .iter()
-            .map(|x| (*x.key(), x.get_demand_volume()))
+            .map(|x| (*x.key(), x.demand_volume()))
             .collect()
     }
 
-    pub fn get_supply_volumes(&self) -> BTreeMap<CityId, Option<Volume>> {
+    pub fn supply_volumes(&self) -> BTreeMap<CityId, Option<Volume>> {
         self.cities
             .iter()
-            .map(|x| (*x.key(), x.get_supply_volume()))
+            .map(|x| (*x.key(), x.supply_volume()))
             .collect()
     }
 
@@ -175,11 +175,11 @@ impl Market {
         }
         groups.insert(pos, (group_id, group_diff));
 
-        let connections = self.geography.get_connections();
+        let connections = self.geography.connections();
         for conn in connections[pos] {
-            let id_from = conn.get_from_id();
-            let id_to = conn.get_to_id();
-            let cost = conn.get_cost();
+            let id_from = conn.id_from();
+            let id_to = conn.id_to();
+            let cost = conn.cost();
 
             let (price_from, price_to) = match (
                 self.cities.get(&id_from).unwrap().state,
@@ -249,8 +249,8 @@ impl Market {
                 .par_iter()
                 .map(|(city_id, price_diff)| {
                     let city = &self.cities.get(city_id).unwrap();
-                    let mut city_demand = city.get_demand().clone();
-                    let mut city_supply = city.get_supply().clone();
+                    let mut city_demand = city.demand().clone();
+                    let mut city_supply = city.supply().clone();
                     city_demand.shift_left(*price_diff);
                     city_supply.shift_left(*price_diff);
                     (city_demand, city_supply)
@@ -271,8 +271,8 @@ impl Market {
                 let new_state = match state_global {
                     MarketState::Equilibrium(price, _, _) => {
                         let price_local = price + *price_diff;
-                        let demand = city_state.get_demand().value(price_local);
-                        let supply = city_state.get_supply().value(price_local);
+                        let demand = city_state.demand().value(price_local);
+                        let supply = city_state.supply().value(price_local);
                         MarketState::Equilibrium(price_local, demand, supply)
                     }
                     state => state,
@@ -355,7 +355,7 @@ pub mod tests {
         fn test_groups(market: &Market, groups: &BTreeMap<CityId, Vec<(CityId, Price)>>) {
             let mut id_to_group: BTreeMap<CityId, CityId> = BTreeMap::new();
             let prices: BTreeMap<CityId, Price> = market
-                .get_prices()
+                .prices()
                 .iter()
                 .map(|x| (*x.0, x.1.unwrap()))
                 .collect();
@@ -366,14 +366,14 @@ pub mod tests {
                 }
             }
 
-            for vec in market.geography.get_connections() {
+            for vec in market.geography.connections() {
                 for conn in vec {
-                    let from = &conn.get_from_id();
-                    let to = &conn.get_to_id();
+                    let from = &conn.id_from();
+                    let to = &conn.id_to();
                     if id_to_group[from] != id_to_group[to] {
                         assert!(
-                            prices[from] - prices[to] < conn.get_cost()
-                                && prices[to] - prices[from] < conn.get_cost()
+                            prices[from] - prices[to] < conn.cost()
+                                && prices[to] - prices[from] < conn.cost()
                         )
                     }
                 }
@@ -517,15 +517,15 @@ pub mod tests {
             market.add_producer(&city_production);
 
             market.update_prices();
-            let prices = market.get_prices();
-            let demands = market.get_demand_volumes();
-            let supplies = market.get_supply_volumes();
+            let prices = market.prices();
+            let demands = market.demand_volumes();
+            let supplies = market.supply_volumes();
             test_eq_arg(prices[&0].unwrap(), Price::new(2.));
             test_eq_value(demands[&0].unwrap(), Volume::new(2.));
             test_eq_value(supplies[&0].unwrap(), Volume::new(2.));
 
             market.update_prices();
-            let prices = market.get_prices();
+            let prices = market.prices();
             test_eq_arg(prices[&0].unwrap(), Price::new(2.));
             test_eq_value(demands[&0].unwrap(), Volume::new(2.));
             test_eq_value(supplies[&0].unwrap(), Volume::new(2.));
@@ -545,17 +545,17 @@ pub mod tests {
             market.add_producer(&city_production);
 
             market.update_prices();
-            let prices = market.get_prices();
-            let demands = market.get_demand_volumes();
-            let supplies = market.get_supply_volumes();
+            let prices = market.prices();
+            let demands = market.demand_volumes();
+            let supplies = market.supply_volumes();
             test_eq_arg(prices[&0].unwrap(), Price::new(3.));
             test_eq_value(demands[&0].unwrap(), Volume::new(2.5));
             test_eq_value(supplies[&0].unwrap(), Volume::new(2.5));
 
             market.update_prices();
-            let prices = market.get_prices();
-            let demands = market.get_demand_volumes();
-            let supplies = market.get_supply_volumes();
+            let prices = market.prices();
+            let demands = market.demand_volumes();
+            let supplies = market.supply_volumes();
             test_eq_arg(prices[&0].unwrap(), Price::new(3.));
             test_eq_value(demands[&0].unwrap(), Volume::new(2.5));
             test_eq_value(supplies[&0].unwrap(), Volume::new(2.5));
@@ -575,17 +575,17 @@ pub mod tests {
             market.add_producer(&city_production);
 
             market.update_prices();
-            let prices = market.get_prices();
-            let demands = market.get_demand_volumes();
-            let supplies = market.get_supply_volumes();
+            let prices = market.prices();
+            let demands = market.demand_volumes();
+            let supplies = market.supply_volumes();
             test_eq_arg(prices[&0].unwrap(), Price::new(2.5));
             test_eq_value(demands[&0].unwrap(), Volume::new(4.));
             test_eq_value(supplies[&0].unwrap(), Volume::new(4.));
 
             market.update_prices();
-            let prices = market.get_prices();
-            let demands = market.get_demand_volumes();
-            let supplies = market.get_supply_volumes();
+            let prices = market.prices();
+            let demands = market.demand_volumes();
+            let supplies = market.supply_volumes();
             test_eq_arg(prices[&0].unwrap(), Price::new(2.5));
             test_eq_value(demands[&0].unwrap(), Volume::new(4.));
             test_eq_value(supplies[&0].unwrap(), Volume::new(4.));
@@ -620,9 +620,9 @@ pub mod tests {
             market.add_producer(&city_1_production);
 
             market.update_prices();
-            let prices = market.get_prices();
-            let demands = market.get_demand_volumes();
-            let supplies = market.get_supply_volumes();
+            let prices = market.prices();
+            let demands = market.demand_volumes();
+            let supplies = market.supply_volumes();
             test_eq_arg(prices[&0].unwrap(), Price::new(2.666666666));
             test_eq_value(demands[&0].unwrap(), Volume::new(2.33333333));
             test_eq_value(supplies[&0].unwrap(), Volume::new(2.3333333));
@@ -631,9 +631,9 @@ pub mod tests {
             test_eq_value(supplies[&1].unwrap(), Volume::new(3.2));
 
             market.update_prices();
-            let prices = market.get_prices();
-            let demands = market.get_demand_volumes();
-            let supplies = market.get_supply_volumes();
+            let prices = market.prices();
+            let demands = market.demand_volumes();
+            let supplies = market.supply_volumes();
             test_eq_arg(prices[&0].unwrap(), Price::new(3.769230769));
             test_eq_value(demands[&0].unwrap(), Volume::new(0.46153855));
             test_eq_value(supplies[&0].unwrap(), Volume::new(3.38461536));
@@ -642,9 +642,9 @@ pub mod tests {
             test_eq_value(supplies[&1].unwrap(), Volume::new(1.7692307));
 
             market.update_prices();
-            let prices = market.get_prices();
-            let demands = market.get_demand_volumes();
-            let supplies = market.get_supply_volumes();
+            let prices = market.prices();
+            let demands = market.demand_volumes();
+            let supplies = market.supply_volumes();
             test_eq_arg(prices[&0].unwrap(), Price::new(3.769230769));
             test_eq_value(demands[&0].unwrap(), Volume::new(0.46153855));
             test_eq_value(supplies[&0].unwrap(), Volume::new(3.38461536));
@@ -686,9 +686,9 @@ pub mod tests {
             };
 
             market.update_prices();
-            let prices = market.get_prices();
-            let demands = market.get_demand_volumes();
-            let supplies = market.get_supply_volumes();
+            let prices = market.prices();
+            let demands = market.demand_volumes();
+            let supplies = market.supply_volumes();
             test_eq_arg(prices[&0].unwrap(), Price::new(2.666666666));
             test_eq_value(demands[&0].unwrap(), Volume::new(2.33333333));
             test_eq_value(supplies[&0].unwrap(), Volume::new(2.3333333));
@@ -697,9 +697,9 @@ pub mod tests {
             test_eq_value(supplies[&1].unwrap(), Volume::new(3.2));
 
             market.update_prices();
-            let prices = market.get_prices();
-            let demands = market.get_demand_volumes();
-            let supplies = market.get_supply_volumes();
+            let prices = market.prices();
+            let demands = market.demand_volumes();
+            let supplies = market.supply_volumes();
             test_eq_arg(prices[&0].unwrap(), Price::new(2.666666666));
             test_eq_value(demands[&0].unwrap(), Volume::new(2.33333333));
             test_eq_value(supplies[&0].unwrap(), Volume::new(2.3333333));
@@ -741,7 +741,7 @@ pub mod tests {
             market.add_producer(&city_2_production);
 
             market.update_prices();
-            let prices = market.get_prices();
+            let prices = market.prices();
             let price_0 = prices[&0].unwrap();
             let price_1 = prices[&1].unwrap();
             let price_2 = prices[&2].unwrap();
@@ -750,7 +750,7 @@ pub mod tests {
             test_eq_arg(price_2, Price::new(6.666666666));
 
             market.update_prices();
-            let prices = market.get_prices();
+            let prices = market.prices();
             let price_0 = prices[&0].unwrap();
             let price_1 = prices[&1].unwrap();
             let price_2 = prices[&2].unwrap();
@@ -759,7 +759,7 @@ pub mod tests {
             test_eq_arg(price_2, Price::new(5.6249999));
 
             market.update_prices();
-            let prices = market.get_prices();
+            let prices = market.prices();
             let price_0 = prices[&0].unwrap();
             let price_1 = prices[&1].unwrap();
             let price_2 = prices[&2].unwrap();

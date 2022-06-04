@@ -17,11 +17,11 @@ impl Producer {
         }
     }
 
-    pub fn get_city(&self) -> CityId {
+    pub fn city(&self) -> CityId {
         self.city
     }
 
-    pub fn get_supply(&self) -> &Supply {
+    pub fn supply(&self) -> &Supply {
         &self.production_costs
     }
 
@@ -41,11 +41,11 @@ impl Consumer {
         Consumer { city, usefulness }
     }
 
-    pub fn get_city(&self) -> CityId {
+    pub fn city(&self) -> CityId {
         self.city
     }
 
-    pub fn get_demand(&self) -> &Demand {
+    pub fn demand(&self) -> &Demand {
         &self.usefulness
     }
 

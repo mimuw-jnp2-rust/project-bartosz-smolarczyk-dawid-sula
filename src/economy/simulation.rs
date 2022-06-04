@@ -71,6 +71,6 @@ impl Simulation {
 
     pub fn calculate_prices(&mut self) -> BTreeMap<CityId, Option<Price>> {
         self.simulate_round();
-        self.market.get_prices()
+        self.market.prices()
     }
 }

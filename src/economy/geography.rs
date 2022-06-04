@@ -15,11 +15,11 @@ impl City {
         City { id, name }
     }
 
-    pub fn get_id(&self) -> CityId {
+    pub fn id(&self) -> CityId {
         self.id
     }
 
-    pub fn get_name(&self) -> &String {
+    pub fn name(&self) -> &String {
         &self.name
     }
 }
@@ -40,15 +40,15 @@ impl Connection {
         }
     }
 
-    pub fn get_from_id(&self) -> CityId {
+    pub fn id_from(&self) -> CityId {
         self.id_from
     }
 
-    pub fn get_to_id(&self) -> CityId {
+    pub fn id_to(&self) -> CityId {
         self.id_to
     }
 
-    pub fn get_cost(&self) -> Price {
+    pub fn cost(&self) -> Price {
         self.cost
     }
 }
@@ -68,14 +68,14 @@ impl Geography {
     }
 
     pub fn add_city(&mut self, city: City) {
-        self.connections.insert(city.get_id(), vec![]);
-        self.cities.insert(city.get_id(), city);
+        self.connections.insert(city.id(), vec![]);
+        self.cities.insert(city.id(), city);
     }
 
     pub fn add_connection(&mut self, connection: Connection) {
-        let id_from = connection.get_from_id();
-        let id_to = connection.get_to_id();
-        let rev_connection = Connection::new(id_to, id_from, connection.get_cost());
+        let id_from = connection.id_from();
+        let id_to = connection.id_to();
+        let rev_connection = Connection::new(id_to, id_from, connection.cost());
 
         self.connections.get_mut(&id_from).unwrap().push(connection);
         self.connections
@@ -84,11 +84,11 @@ impl Geography {
             .push(rev_connection);
     }
 
-    pub fn get_cities(&self) -> Vec<&City> {
+    pub fn cities(&self) -> Vec<&City> {
         Vec::from_iter(self.cities.values())
     }
 
-    pub fn get_connections(&self) -> Vec<&Vec<Connection>> {
+    pub fn connections(&self) -> Vec<&Vec<Connection>> {
         Vec::from_iter(self.connections.values())
     }
 }
