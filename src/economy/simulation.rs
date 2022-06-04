@@ -12,15 +12,16 @@ use crate::economy::geography::City;
 use crate::economy::geography::CityId;
 use crate::economy::geography::Connection;
 use crate::economy::geography::Geography;
-use crate::economy::market::{CityPrice, Market};
-use crate::util::types::Value;
+use crate::economy::market::Market;
+
+use super::types::Price;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SimulationBuilder {
     turns: usize,
     cities: Vec<City>,
     connections: Vec<Connection>,
-    initial_prices: Vec<CityPrice>,
+    initial_prices: Vec<(CityId, Price)>,
     producers: Vec<Producer>,
     consumers: Vec<Consumer>,
 }
@@ -55,7 +56,7 @@ impl SimulationBuilder {
 
         let mut simulation = Simulation::new(self.turns, geography);
         for init in self.initial_prices {
-            simulation.change_price(init.city, init.price);
+            simulation.change_price(init.0, init.1);
         }
         for producer in self.producers {
             simulation.add_producer(producer);
@@ -86,7 +87,7 @@ impl Simulation {
         }
     }
 
-    fn change_price(&mut self, city_id: CityId, price: Value) {
+    fn change_price(&mut self, city_id: CityId, price: Price) {
         self.market.change_price(&city_id, &price);
     }
 
@@ -114,9 +115,9 @@ impl Simulation {
         let mut result = SimulationResult::new(self);
         for _ in 0..self.turns {
             self.simulate_turn();
-            for (city_id, price) in self.market.get_prices() {
-                let name = self.market.get_geography().get_cities().get(*city_id).unwrap().name.clone();
-                result.prices.get_mut(&name).unwrap().push(*price);
+            for (city_id, price) in self.market.prices() {
+                let name = self.market.geography().cities().get(city_id).unwrap().name.clone();
+                result.prices.get_mut(&name).unwrap().push(price);
             }
         }
         result
@@ -125,14 +126,14 @@ impl Simulation {
 
 #[derive(Debug)]
 pub struct SimulationResult {
-    prices: BTreeMap<String, Vec<Value>>,
+    prices: BTreeMap<String, Vec<Option<Price>>>,
 }
 
 impl SimulationResult {
     fn new(simulation: &Simulation) -> SimulationResult {
         let mut initial_prices = BTreeMap::new();
-        for city in simulation.market.get_geography().get_cities() {
-            let price = *simulation.market.get_prices().get(&city.id).unwrap();
+        for city in simulation.market.geography().cities() {
+            let price = *simulation.market.prices().get(&city.id).unwrap();
             initial_prices.insert(city.name.clone(), vec![price]);
         }
         SimulationResult {

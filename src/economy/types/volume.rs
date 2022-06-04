@@ -1,6 +1,7 @@
 use std::ops::{Add, AddAssign, Neg, Sub, SubAssign};
 
 use ordered_float::NotNan;
+use serde::{Serialize, Deserialize};
 
 use super::InnerValue;
 
@@ -116,5 +117,21 @@ impl PartialOrd for Volume {
 impl Ord for Volume {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.cmp(other)
+    }
+}
+
+impl Serialize for Volume {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer {
+        self.float().serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for Volume {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de> {
+        InnerValue::deserialize(deserializer).map(|x| Volume::new(x))
     }
 }

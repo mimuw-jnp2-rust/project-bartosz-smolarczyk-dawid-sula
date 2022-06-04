@@ -4,6 +4,8 @@ extern crate line_intersection;
 use geo::Line;
 use line_intersection::LineInterval;
 use ordered_float::NotNan;
+use serde::Deserialize;
+use serde::Serialize;
 use std::cmp::max;
 use std::cmp::min;
 use std::collections::BTreeMap;
@@ -208,6 +210,22 @@ impl FunctionAbstract for Function {
 
     fn shift_left(&mut self, shift: ArgT) -> &Self {
         self.shift_right(-shift)
+    }
+}
+
+impl Serialize for Function {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer {
+        todo!()
+    }
+}
+
+impl<'de> Deserialize<'de> for Function {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de> {
+        todo!()
     }
 }
 

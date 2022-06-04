@@ -1,3 +1,6 @@
+use serde::Deserialize;
+use serde::Serialize;
+
 use crate::economy::function::supply::Supply;
 use crate::economy::function::ArgT;
 use crate::economy::function::Function;
@@ -5,7 +8,7 @@ use crate::economy::function::FunctionAbstract;
 use crate::economy::function::ValueT;
 use crate::economy::market::MarketState;
 
-#[derive(Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Demand {
     function: Function,
 }

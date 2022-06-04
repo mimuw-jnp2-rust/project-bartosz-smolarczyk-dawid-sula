@@ -110,7 +110,7 @@ impl Market {
         Market { geography, cities }
     }
 
-    pub fn geagraphy(&self) -> &Geography {
+    pub fn geography(&self) -> &Geography {
         &self.geography
     }
 
