@@ -47,6 +47,10 @@ impl Demand {
             }
         }
     }
+
+    pub fn intervals(&self) -> Vec<(ArgT, ValueT)> {
+        self.function.intervals()
+    }
 }
 
 impl FunctionAbstract for Demand {

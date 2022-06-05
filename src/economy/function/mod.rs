@@ -1,9 +1,3 @@
-extern crate geo;
-extern crate line_intersection;
-
-use geo::Line;
-use line_intersection::LineInterval;
-use ordered_float::NotNan;
 use serde::Deserialize;
 use serde::Serialize;
 use std::cmp::max;
@@ -16,8 +10,6 @@ use std::ops::Bound::Unbounded;
 pub use demand::Demand;
 pub use supply::Supply;
 
-use super::types::Price;
-use super::types::Volume;
 
 mod demand;
 
@@ -111,7 +103,7 @@ impl Function {
         let mut min = min(f_smaller.min_arg, f_greater.min_arg);
         let mut max = max(f_smaller.max_arg, f_greater.max_arg);
 
-        let eps = Price::new(1e-6);
+        let eps = ArgT::new(1e-6);
         while max - min > eps {
             let mid = (min + max) / 2.;
             let smaller_value = f_smaller.value(mid);
@@ -123,6 +115,12 @@ impl Function {
             }
         }
         Some((min, f_smaller.value(min)))
+    }
+
+    pub fn intervals(&self) -> Vec<(ArgT, ValueT)> {
+        let mut res: Vec<(ArgT, ValueT)> = self.intervals().iter().cloned().collect();
+        res.sort_unstable_by_key(|x| x.0);
+        res
     }
 }
 
@@ -137,7 +135,7 @@ impl FunctionAbstract for Function {
                     let arg_range = (upper_arg - lower_arg).float();
                     let val_diff = (upper_val - lower_val).float();
                     let change = val_diff * (arg_diff / arg_range);
-                    lower_val + Volume::new(change)
+                    lower_val + ValueT::new(change)
                 }
             }
             (Some((_, lower_val)), None) => lower_val,

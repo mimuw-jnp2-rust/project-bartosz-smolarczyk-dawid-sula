@@ -36,6 +36,10 @@ impl Supply {
     pub fn intersect(&self, demand: &Demand) -> MarketState {
         demand.intersect(self)
     }
+
+    pub fn intervals(&self) -> Vec<(ArgT, ValueT)> {
+        self.function.intervals()
+    }
 }
 
 impl FunctionAbstract for Supply {
