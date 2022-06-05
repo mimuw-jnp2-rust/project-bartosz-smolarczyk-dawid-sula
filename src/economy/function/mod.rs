@@ -10,7 +10,6 @@ use std::ops::Bound::Unbounded;
 pub use demand::Demand;
 pub use supply::Supply;
 
-
 mod demand;
 
 mod supply;
@@ -118,7 +117,7 @@ impl Function {
     }
 
     pub fn intervals(&self) -> Vec<(ArgT, ValueT)> {
-        let mut res: Vec<(ArgT, ValueT)> = self.intervals().iter().cloned().collect();
+        let mut res: Vec<(ArgT, ValueT)> = self.intervals().to_vec();
         res.sort_unstable_by_key(|x| x.0);
         res
     }
