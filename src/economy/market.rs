@@ -289,8 +289,8 @@ impl Market {
         });
     }
 
-    pub fn simulate(&mut self, tours: u32) {
-        for _ in 0..tours {
+    pub fn simulate(&mut self, turns: u32) {
+        for _ in 0..turns {
             self.update_prices();
         }
     }
@@ -327,7 +327,7 @@ pub mod tests {
     use ordered_float::NotNan;
     use std::collections::BTreeMap;
 
-    fn generateCities(
+    fn generate_cities(
         geography: &Geography,
         prices_vec: Vec<(CityId, InnerValue)>,
     ) -> DashMap<CityId, CityData> {
@@ -394,7 +394,7 @@ pub mod tests {
             geography.add_city(City::new(1, String::new()));
             geography.add_connection(Connection::new(0, 1, Price::new(100.)));
 
-            let cities = generateCities(&geography, vec![(0, 5.), (1, 7.)]);
+            let cities = generate_cities(&geography, vec![(0, 5.), (1, 7.)]);
 
             let market = Market { geography, cities };
             let groups = market.calculate_groups();
@@ -410,7 +410,7 @@ pub mod tests {
             geography.add_city(City::new(1, String::new()));
             geography.add_connection(Connection::new(0, 1, Price::new(5.)));
 
-            let cities = generateCities(&geography, vec![(0, 5.), (1, 25.)]);
+            let cities = generate_cities(&geography, vec![(0, 5.), (1, 25.)]);
 
             let market = Market { geography, cities };
             let groups = market.calculate_groups();
@@ -426,7 +426,7 @@ pub mod tests {
             geography.add_city(City::new(1, String::new()));
             geography.add_connection(Connection::new(0, 1, Price::new(5.)));
 
-            let cities = generateCities(&geography, vec![(0, 0.), (1, 20.)]);
+            let cities = generate_cities(&geography, vec![(0, 0.), (1, 20.)]);
 
             let market = Market { geography, cities };
             let groups = market.calculate_groups();
@@ -446,7 +446,7 @@ pub mod tests {
             geography.add_connection(Connection::new(1, 2, Price::new(100.)));
             geography.add_connection(Connection::new(0, 2, Price::new(100.)));
 
-            let cities = generateCities(&geography, vec![(0, 5.), (1, 25.), (2, 30.)]);
+            let cities = generate_cities(&geography, vec![(0, 5.), (1, 25.), (2, 30.)]);
 
             let market = Market { geography, cities };
             let groups = market.calculate_groups();
@@ -466,7 +466,7 @@ pub mod tests {
             geography.add_connection(Connection::new(1, 2, Price::new(5.)));
             geography.add_connection(Connection::new(0, 2, Price::new(100.)));
 
-            let cities = generateCities(&geography, vec![(0, 5.), (1, 25.), (2, 45.)]);
+            let cities = generate_cities(&geography, vec![(0, 5.), (1, 25.), (2, 45.)]);
 
             let market = Market { geography, cities };
             let groups = market.calculate_groups();
@@ -492,7 +492,7 @@ pub mod tests {
             geography.add_connection(Connection::new(2, 3, Price::new(100.)));
             geography.add_connection(Connection::new(3, 4, Price::new(5.)));
 
-            let cities = generateCities(
+            let cities = generate_cities(
                 &geography,
                 vec![(0, 5.), (1, 25.), (2, 45.), (3, 20.), (4, 10.)],
             );
