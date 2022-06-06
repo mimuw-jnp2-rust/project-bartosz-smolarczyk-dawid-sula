@@ -10,24 +10,17 @@
         
     ],
     "initial_prices":[
-        {
-            "city":0,
-            "price":0
-        }
+        [0,0]
     ],
     "producers":[
         {
             "city":0,
             "production_costs":{
-                "arg_min":0,
-                "values":[
-                    0,
-                    1,
-                    2,
-                    2,
-                    3,
-                    3,
-                    3
+                "function":[
+                    [0,0],
+                    [2,1],
+                    [4,4],
+                    [6,6]
                 ]
             }
         }
@@ -36,16 +29,9 @@
         {
             "city":0,
             "usefulness":{
-                "arg_min":0,
-                "values":[
-                    8,
-                    6,
-                    5,
-                    4,
-                    3,
-                    2,
-                    1,
-                    0
+                "function":[
+                    [1,5],
+                    [5,0]
                 ]
             }
         }

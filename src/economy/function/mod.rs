@@ -215,7 +215,8 @@ impl Serialize for Function {
     where
         S: serde::Serializer,
     {
-        todo!()
+        let result = Vec::serialize(&Vec::from_iter(self.intervals.iter()), serializer)?;
+        Ok(result)
     }
 }
 
@@ -224,7 +225,8 @@ impl<'de> Deserialize<'de> for Function {
     where
         D: serde::Deserializer<'de>,
     {
-        todo!()
+        let values: Vec<(ArgT, ValueT)> = Vec::deserialize(deserializer)?;
+        Ok(Function::new(values.into_iter()))
     }
 }
 

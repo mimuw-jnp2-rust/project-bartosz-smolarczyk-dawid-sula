@@ -23,8 +23,14 @@ fn main() {
             eprintln!("could not open {}: {}", input_path.display(), why);
             std::process::exit(1);
         }
-        Ok(file) => file,
+        Ok(result) => result,
     };
+
+    println!("{:#?}", simulation_builder);
+    let mut simulation = simulation_builder.build();
+    println!("{:#?}", simulation);
+    let simulation_result = simulation.run();
+    println!("{:#?}", simulation_result);
 
     let output_file = match File::create(&output_path) {
         Err(why) => {
