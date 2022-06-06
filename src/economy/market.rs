@@ -533,6 +533,8 @@ pub mod tests {
 
             market.update_prices();
             let prices = market.prices();
+            let demands = market.demand_volumes();
+            let supplies = market.supply_volumes();
             test_eq_arg(prices[&0].unwrap(), Price::new(2.));
             test_eq_value(demands[&0].unwrap(), Volume::new(2.));
             test_eq_value(supplies[&0].unwrap(), Volume::new(2.));
