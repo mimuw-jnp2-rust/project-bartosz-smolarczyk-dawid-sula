@@ -1,12 +1,12 @@
 use std::collections::BTreeMap;
 use std::error::Error;
+use std::f32::consts::PI;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
-use std::f32::consts::PI;
 
-use serde::{Deserialize, Serialize};
 use plotters::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use crate::economy::entity::Consumer;
 use crate::economy::entity::Producer;
@@ -28,50 +28,6 @@ pub struct SimulationBuilder {
     consumers: Vec<Consumer>,
 }
 
-impl SimulationBuilder {
-    pub fn new() -> SimulationBuilder {
-        SimulationBuilder {
-            turns: 0,
-            cities: vec![],
-            connections: vec![],
-            initial_prices: vec![],
-            producers: vec![],
-            consumers: vec![],
-        }
-    }
-
-    pub fn read_from_file<P: AsRef<Path>>(path: P) -> Result<SimulationBuilder, Box<dyn Error>> {
-        let file = File::open(path)?;
-        let reader = BufReader::new(file);
-        let simulation_builder = serde_json::from_reader(reader)?;
-        Ok(simulation_builder)
-    }
-
-    pub fn build(self) -> Simulation {
-        let mut geography = Geography::new();
-        for city in self.cities {
-            geography.add_city(city);
-        }
-        for connection in self.connections {
-            geography.add_connection(connection);
-        }
-
-        let mut simulation = Simulation::new(
-            self.turns,
-            geography,
-            self.initial_prices.into_iter().collect(),
-        );
-        for producer in self.producers {
-            simulation.add_producer(producer);
-        }
-        for consumer in self.consumers {
-            simulation.add_consumer(consumer);
-        }
-
-        simulation
-    }
-}
-
 #[derive(Debug)]
 pub struct Simulation {
     turns: usize,
@@ -88,6 +44,34 @@ impl Simulation {
             producers: vec![],
             consumers: vec![],
         }
+    }
+
+    pub fn read_from_file<P: AsRef<Path>>(path: P) -> Result<Simulation, Box<dyn Error>> {
+        let file = File::open(path)?;
+        let reader = BufReader::new(file);
+        let simulation_builder: SimulationBuilder = serde_json::from_reader(reader)?;
+    
+        let mut geography = Geography::new();
+        for city in simulation_builder.cities {
+            geography.add_city(city);
+        }
+        for connection in simulation_builder.connections {
+            geography.add_connection(connection);
+        }
+    
+        let mut simulation = Simulation::new(
+            simulation_builder.turns,
+            geography,
+            simulation_builder.initial_prices.into_iter().collect(),
+        );
+        for producer in simulation_builder.producers {
+            simulation.add_producer(producer);
+        }
+        for consumer in simulation_builder.consumers {
+            simulation.add_consumer(consumer);
+        }
+    
+        Ok(simulation)
     }
 
     fn add_producer(&mut self, producer: Producer) {
@@ -129,9 +113,9 @@ impl Simulation {
         result
     }
 
-    pub fn plot(&mut self, output_file: &String) -> Result<(), Box<dyn Error>> {
+    pub fn plot(&mut self, output_file: &str) -> Result<(), Box<dyn Error>> {
         const SIZE_X: u32 = 1024; // be sensible here
-        const SIZE_Y: u32 = 768;  // be sensible here too
+        const SIZE_Y: u32 = 768; // be sensible here too
         const MIN_X: f32 = 0.0;
         const MAX_X: f32 = 10.0;
         const AVG_X: f32 = (MAX_X + MIN_X) / 2.0;
@@ -154,27 +138,35 @@ impl Simulation {
             .caption("Subtitle", ("sans-serif", 40))
             .build_cartesian_2d(MIN_X..MAX_X, MIN_Y..MAX_Y)?;
 
-        chart_builder.configure_mesh()
+        chart_builder
+            .configure_mesh()
             .x_labels(10)
             .y_labels(10)
             .disable_mesh()
             .draw()?;
 
-        chart_builder.draw_series(LineSeries::new(
-            x_axis.values().map(|x| (x, (x / PI - PI / 2.0).sin() * DEV_Y + DEV_Y)),
-            &RED,
-        ))?
+        chart_builder
+            .draw_series(LineSeries::new(
+                x_axis
+                    .values()
+                    .map(|x| (x, (x / PI - PI / 2.0).sin() * DEV_Y + DEV_Y)),
+                &RED,
+            ))?
             .label("Supply")
             .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &RED));
-    
-        chart_builder.draw_series(LineSeries::new(
-            x_axis.values().map(|x| (x, (x / PI).cos() * DEV_Y + DEV_Y)),
-            &BLUE,
-        ))?
+
+        chart_builder
+            .draw_series(LineSeries::new(
+                x_axis.values().map(|x| (x, (x / PI).cos() * DEV_Y + DEV_Y)),
+                &BLUE,
+            ))?
             .label("Demand")
             .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &BLUE));
 
-        chart_builder.configure_series_labels().border_style(&BLACK).draw()?;
+        chart_builder
+            .configure_series_labels()
+            .border_style(&BLACK)
+            .draw()?;
 
         Ok(())
     }
