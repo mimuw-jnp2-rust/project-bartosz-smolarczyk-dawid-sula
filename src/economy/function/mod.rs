@@ -123,19 +123,23 @@ impl Function {
     }
 
     pub fn min_arg(&self) -> ArgT {
-        self.left_arg
+        let args = Vec::from_iter(self.intervals.keys());
+        **args.iter().min().unwrap()
     }
 
     pub fn min_value(&self) -> ValueT {
-        self.left_value
+        let values = Vec::from_iter(self.intervals.values());
+        **values.iter().min().unwrap()
     }
 
     pub fn max_arg(&self) -> ArgT {
-        self.right_arg
+        let args = Vec::from_iter(self.intervals.keys());
+        **args.iter().max().unwrap()
     }
 
     pub fn max_value(&self) -> ValueT {
-        self.right_value
+        let values = Vec::from_iter(self.intervals.values());
+        **values.iter().max().unwrap()
     }
 }
 
