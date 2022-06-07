@@ -3,8 +3,10 @@ use std::error::Error;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
+use std::f32::consts::PI;
 
 use serde::{Deserialize, Serialize};
+use plotters::prelude::*;
 
 use crate::economy::entity::Consumer;
 use crate::economy::entity::Producer;
@@ -125,6 +127,56 @@ impl Simulation {
             }
         }
         result
+    }
+
+    pub fn plot(&mut self, output_file: &String) -> Result<(), Box<dyn Error>> {
+        const SIZE_X: u32 = 1024; // be sensible here
+        const SIZE_Y: u32 = 768;  // be sensible here too
+        const MIN_X: f32 = 0.0;
+        const MAX_X: f32 = 10.0;
+        const AVG_X: f32 = (MAX_X + MIN_X) / 2.0;
+        const DEV_X: f32 = (MAX_X - MIN_X) / 2.0;
+        const MIN_Y: f32 = 0.0;
+        const MAX_Y: f32 = 10.0;
+        const AVG_Y: f32 = (MAX_Y + MIN_Y) / 2.0;
+        const DEV_Y: f32 = (MAX_Y - MIN_Y) / 2.0;
+        let root_area = BitMapBackend::new(output_file, (SIZE_X, SIZE_Y)).into_drawing_area();
+
+        root_area.fill(&WHITE)?;
+
+        let root_area = root_area.titled("TITLE", ("sans-serif", 60))?;
+
+        let x_axis = (MIN_X..MAX_X).step((MAX_X - MIN_X) / 100.0);
+
+        let mut chart_builder = ChartBuilder::on(&root_area)
+            .margin(5)
+            .set_all_label_area_size(50)
+            .caption("Subtitle", ("sans-serif", 40))
+            .build_cartesian_2d(MIN_X..MAX_X, MIN_Y..MAX_Y)?;
+
+        chart_builder.configure_mesh()
+            .x_labels(10)
+            .y_labels(10)
+            .disable_mesh()
+            .draw()?;
+
+        chart_builder.draw_series(LineSeries::new(
+            x_axis.values().map(|x| (x, (x / PI - PI / 2.0).sin() * DEV_Y + DEV_Y)),
+            &RED,
+        ))?
+            .label("Supply")
+            .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &RED));
+    
+        chart_builder.draw_series(LineSeries::new(
+            x_axis.values().map(|x| (x, (x / PI).cos() * DEV_Y + DEV_Y)),
+            &BLUE,
+        ))?
+            .label("Demand")
+            .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &BLUE));
+
+        chart_builder.configure_series_labels().border_style(&BLACK).draw()?;
+
+        Ok(())
     }
 }
 

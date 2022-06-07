@@ -29,14 +29,13 @@ fn main() {
     println!("{:#?}", simulation_builder);
     let mut simulation = simulation_builder.build();
     println!("{:#?}", simulation);
-    let simulation_result = simulation.run();
-    println!("{:#?}", simulation_result);
+    simulation.plot(&args[2]);
 
-    let output_file = match File::create(&output_path) {
-        Err(why) => {
-            eprintln!("could not create {}: {}", output_path.display(), why);
-            std::process::exit(1);
-        }
-        Ok(file) => file,
-    };
+    // let output_file = match File::create(&output_path) {
+    //     Err(why) => {
+    //         eprintln!("could not create {}: {}", output_path.display(), why);
+    //         std::process::exit(1);
+    //     }
+    //     Ok(file) => file,
+    // };
 }
