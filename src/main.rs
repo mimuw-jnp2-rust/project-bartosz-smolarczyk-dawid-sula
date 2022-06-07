@@ -18,7 +18,7 @@ fn main() {
     let output_path = Path::new(&args[2]);
 
     /* load the simulation */
-    let simulation_builder = match SimulationBuilder::read_from_file(&input_path) {
+    let mut simulation = match Simulation::read_from_file(&input_path) {
         Err(why) => {
             eprintln!("could not open {}: {}", input_path.display(), why);
             std::process::exit(1);
@@ -26,8 +26,7 @@ fn main() {
         Ok(result) => result,
     };
 
-    println!("{:#?}", simulation_builder);
-    let mut simulation = simulation_builder.build();
+    simulation.run();
     println!("{:#?}", simulation);
     simulation.plot(&args[2]);
 
