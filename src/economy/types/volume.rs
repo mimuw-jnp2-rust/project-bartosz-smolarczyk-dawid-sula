@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Neg, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub, SubAssign};
 
 use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
@@ -89,6 +89,22 @@ impl Neg for Volume {
 
     fn neg(self) -> Self::Output {
         Self::from_notnan(-self.notnan())
+    }
+}
+
+impl Mul<InnerValue> for Volume {
+    type Output = Self;
+
+    fn mul(self, rhs: InnerValue) -> Self::Output {
+        Volume::from_notnan(self.notnan() * rhs)
+    }
+}
+
+impl Div<InnerValue> for Volume {
+    type Output = Self;
+
+    fn div(self, rhs: InnerValue) -> Self::Output {
+        Volume::from_notnan(self.notnan() / rhs)
     }
 }
 
