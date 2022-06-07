@@ -117,9 +117,25 @@ impl Function {
     }
 
     pub fn intervals(&self) -> Vec<(ArgT, ValueT)> {
-        let mut res: Vec<(ArgT, ValueT)> = self.intervals().to_vec();
+        let mut res = Vec::from_iter(self.intervals.clone().into_iter());
         res.sort_unstable_by_key(|x| x.0);
         res
+    }
+
+    pub fn min_arg(&self) -> ArgT {
+        self.min_arg
+    }
+
+    pub fn min_value(&self) -> ValueT {
+        self.min_value
+    }
+
+    pub fn max_arg(&self) -> ArgT {
+        self.max_arg
+    }
+
+    pub fn max_value(&self) -> ValueT {
+        self.max_value
     }
 }
 
