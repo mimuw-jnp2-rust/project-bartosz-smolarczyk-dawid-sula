@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use super::InnerValue;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Volume {
     value: NotNan<InnerValue>,
 }
@@ -89,26 +89,6 @@ impl Neg for Volume {
 
     fn neg(self) -> Self::Output {
         Self::from_notnan(-self.notnan())
-    }
-}
-
-impl PartialEq for Volume {
-    fn eq(&self, other: &Self) -> bool {
-        self.notnan().eq(&other.notnan())
-    }
-}
-
-impl Eq for Volume {}
-
-impl PartialOrd for Volume {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Ord for Volume {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.notnan().cmp(&other.notnan())
     }
 }
 

@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use super::InnerValue;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Price {
     value: NotNan<InnerValue>,
 }
@@ -105,26 +105,6 @@ impl Div<InnerValue> for Price {
 
     fn div(self, rhs: InnerValue) -> Self::Output {
         Price::from_notnan(self.notnan() / rhs)
-    }
-}
-
-impl PartialEq for Price {
-    fn eq(&self, other: &Self) -> bool {
-        self.notnan() == other.notnan()
-    }
-}
-
-impl Eq for Price {}
-
-impl PartialOrd for Price {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Ord for Price {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.notnan().cmp(&other.notnan())
     }
 }
 
