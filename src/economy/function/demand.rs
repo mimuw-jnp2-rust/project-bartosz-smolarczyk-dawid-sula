@@ -37,9 +37,9 @@ impl Demand {
         match self.function.intersect(supply.function()) {
             Some((price, amount)) => MarketState::Equilibrium(price, amount, amount),
             None => {
-                if self.function().max_value > supply.function().max_value {
+                if self.function().right_value > supply.function().right_value {
                     MarketState::UnderSupply
-                } else if self.function().min_value < supply.function().min_value {
+                } else if self.function().left_value < supply.function().left_value {
                     MarketState::OverSupply
                 } else {
                     unreachable!()

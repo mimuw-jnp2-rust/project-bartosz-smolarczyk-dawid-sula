@@ -32,10 +32,10 @@ pub trait FunctionAbstract {
 
 #[derive(Clone, Debug)]
 pub struct Function {
-    min_arg: ArgT,
-    min_value: ValueT,
-    max_arg: ArgT,
-    max_value: ValueT,
+    left_arg: ArgT,
+    left_value: ValueT,
+    right_arg: ArgT,
+    right_value: ValueT,
     intervals: BTreeMap<ArgT, ValueT>,
 }
 
@@ -52,14 +52,14 @@ impl Function {
         let intervals: BTreeMap<ArgT, ValueT> = values.collect();
         assert!(!intervals.is_empty());
 
-        let (min_arg, min_value) = intervals.iter().next().unwrap();
-        let (max_arg, max_value) = intervals.iter().next_back().unwrap();
+        let (left_arg, left_value) = intervals.iter().next().unwrap();
+        let (right_arg, right_value) = intervals.iter().next_back().unwrap();
 
         Function {
-            min_arg: *min_arg,
-            min_value: *min_value,
-            max_arg: *max_arg,
-            max_value: *max_value,
+            left_arg: *left_arg,
+            left_value: *left_value,
+            right_arg: *right_arg,
+            right_value: *right_value,
             intervals: intervals,
         }
     }
@@ -86,21 +86,21 @@ impl Function {
 
     pub fn intersect(&self, other: &Self) -> Option<(ArgT, ValueT)> {
         // Functions might not intersect. Outside algorithms scope.
-        if self.min_value > other.min_value && self.max_value > other.max_value {
+        if self.left_value > other.left_value && self.right_value > other.right_value {
             return None;
         }
-        if self.min_value < other.min_value && self.max_value < other.max_value {
+        if self.left_value < other.left_value && self.right_value < other.right_value {
             return None;
         }
 
-        let (f_smaller, f_greater) = if self.min_value < other.min_value {
+        let (f_smaller, f_greater) = if self.left_value < other.left_value {
             (self, other)
         } else {
             (other, self)
         };
 
-        let mut min = min(f_smaller.min_arg, f_greater.min_arg);
-        let mut max = max(f_smaller.max_arg, f_greater.max_arg);
+        let mut min = min(f_smaller.left_arg, f_greater.left_arg);
+        let mut max = max(f_smaller.right_arg, f_greater.right_arg);
 
         let eps = ArgT::new(1e-6);
         while max - min > eps {
@@ -123,19 +123,19 @@ impl Function {
     }
 
     pub fn min_arg(&self) -> ArgT {
-        self.min_arg
+        self.left_arg
     }
 
     pub fn min_value(&self) -> ValueT {
-        self.min_value
+        self.left_value
     }
 
     pub fn max_arg(&self) -> ArgT {
-        self.max_arg
+        self.right_arg
     }
 
     pub fn max_value(&self) -> ValueT {
-        self.max_value
+        self.right_value
     }
 }
 
@@ -160,8 +160,8 @@ impl FunctionAbstract for Function {
     }
 
     fn add_value(&mut self, value: ValueT) -> &mut Self {
-        self.min_value += value;
-        self.max_value += value;
+        self.left_value += value;
+        self.right_value += value;
         self.intervals = self
             .intervals
             .iter()
@@ -181,11 +181,11 @@ impl FunctionAbstract for Function {
             .map(|arg| (arg, self.value(arg) + function.value(arg)))
             .collect();
 
-        self.min_arg = min(self.min_arg, function.min_arg);
-        self.min_value += function.min_value;
+        self.left_arg = min(self.left_arg, function.left_arg);
+        self.left_value += function.left_value;
 
-        self.max_arg = max(self.max_arg, function.max_arg);
-        self.max_value += function.max_value;
+        self.right_arg = max(self.right_arg, function.right_arg);
+        self.right_value += function.right_value;
 
         self.intervals = intervals;
 
@@ -199,11 +199,11 @@ impl FunctionAbstract for Function {
             .map(|arg| (arg, self.value(arg) - function.value(arg)))
             .collect();
 
-        self.min_arg = min(self.min_arg, function.min_arg);
-        self.min_value -= function.min_value;
+        self.left_arg = min(self.left_arg, function.left_arg);
+        self.left_value -= function.left_value;
 
-        self.max_arg = max(self.max_arg, function.max_arg);
-        self.max_value -= function.max_value;
+        self.right_arg = max(self.right_arg, function.right_arg);
+        self.right_value -= function.right_value;
 
         self.intervals = intervals;
 
@@ -211,8 +211,8 @@ impl FunctionAbstract for Function {
     }
 
     fn shift_right(&mut self, shift: ArgT) -> &mut Self {
-        self.min_arg += shift;
-        self.max_arg += shift;
+        self.left_arg += shift;
+        self.right_arg += shift;
         self.intervals = self
             .intervals
             .iter()
