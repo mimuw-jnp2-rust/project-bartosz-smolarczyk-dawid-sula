@@ -1,12 +1,12 @@
 use std::collections::BTreeMap;
 use std::error::Error;
-use std::f32::consts::PI;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
 use std::cmp::{min, max};
 
 use plotters::prelude::*;
+
 use serde::{Deserialize, Serialize};
 
 use crate::economy::types::InnerValue;
@@ -106,7 +106,6 @@ impl Simulation {
 
     pub fn plot(&mut self, output_file: &str) -> Result<(), Box<dyn Error>> {
         // general settings
-        let plot_count: u32 = self.market.geography().cities().len() as u32;
         const HEAD_SIZE_Y: u32 = 128;
         const PLOT_SIZE_X: u32 = 1024;
         const PLOT_SIZE_Y: u32 = 768;
@@ -114,8 +113,8 @@ impl Simulation {
         const LABEL_AREA_SIZE: u32 = 50;
         const TITLE_FONT_SIZE: u32 = 60;
         const CAPTION_FONT_SIZE: u32 = 40;
-        const MAX_X_LABELS_CNT: usize = 10;
-        const MAX_Y_LABELS_CNT: usize = 5;
+        const MAX_X_LABELS_CNT: usize = 8;
+        const MAX_Y_LABELS_CNT: usize = 6;
         const SERIES_STEPS: InnerValue = 128.0;
         const DOTTED_STEPS_VERTICAL: InnerValue = 84.0;
         const DOTTED_STEPS_HORIZONTAL: InnerValue = 112.0; 
@@ -125,6 +124,8 @@ impl Simulation {
         const GREY: RGBColor = RGBColor(64, 64, 64);
         const GREEN_DARK: RGBColor = RGBColor(0, 176, 0);
 
+        let plot_count: u32 = self.market.geography().cities().len() as u32;
+        
         let root_area = BitMapBackend::new(output_file, (PLOT_SIZE_X, HEAD_SIZE_Y + PLOT_SIZE_Y * plot_count))
             .into_drawing_area();
         
@@ -135,10 +136,10 @@ impl Simulation {
         for city in self.market.geography().cities() {
             let city_data = self.market.cities().get(&city.id).unwrap();
             
-            // city specific settings
-            let min_x: ArgT = ArgT::new(0.0); // min(city_data.supply().function().min_arg(), city_data.demand().function().min_arg());
+            // city specific values
+            let min_x: ArgT = min(city_data.supply().function().min_arg(), city_data.demand().function().min_arg());
             let max_x: ArgT = max(city_data.supply().function().max_arg(), city_data.demand().function().max_arg());
-            let min_y: ValueT = ValueT::new(0.0); // min(city_data.supply().function().min_value(), city_data.demand().function().min_value());
+            let min_y: ValueT = min(city_data.supply().function().min_value(), city_data.demand().function().min_value());
             let max_y: ValueT = max(city_data.supply().function().max_value(), city_data.demand().function().max_value()) * 1.1;
             let exchange_min: ValueT = min(city_data.supply_volume().unwrap(), city_data.demand_volume().unwrap());
             let exchange_max: ValueT = max(city_data.supply_volume().unwrap(), city_data.demand_volume().unwrap());
@@ -160,14 +161,16 @@ impl Simulation {
                 .set_label_area_size(LabelAreaPosition::Right, LABEL_AREA_SIZE)
                 .set_label_area_size(LabelAreaPosition::Bottom, LABEL_AREA_SIZE)
                 .caption(city.name.clone(), ("sans-serif", CAPTION_FONT_SIZE))
-                .build_cartesian_2d(min_x.float()..max_x.float(), min_y.float()..max_y.float())?;
+                .build_cartesian_2d(
+                    min_x.float()..max_x.float(), 
+                    min_y.float()..max_y.float(),
+                )?;
 
             chart_builder.configure_mesh()
                 .x_desc("Price / Unit")
                 .y_desc("Units")
                 .x_labels(MAX_X_LABELS_CNT)
                 .y_labels(MAX_Y_LABELS_CNT)
-                .disable_mesh()
                 .x_label_formatter(&|v| format!("{:.2}", v))
                 .y_label_formatter(&|v| format!("{:.2}", v))
                 .draw()?;
@@ -226,7 +229,18 @@ impl Simulation {
                     &|coord, size, style| {
                         EmptyElement::at(coord)
                             + Circle::new((0, 0), size, style)
-                            + Text::new(description.clone(), (5, 5), ("sans-serif", 20))
+                            + Text::new(description.clone(), (5, -18), ("sans-serif", 20))
+                    },
+                ))?;
+
+                chart_builder.draw_series(PointSeries::of_element(
+                    vec![(point.0.float(), min_y.float())],
+                    2,
+                    ShapeStyle::from(&GREY).filled(),
+                    &|coord, size, style| {
+                        EmptyElement::at(coord)
+                            + Circle::new((0, 0), size, style)
+                            + Text::new(format!("{:.2}", point.0.float()), (5, -16), ("sans-serif", 18))
                     },
                 ))?;
 
@@ -251,6 +265,17 @@ impl Simulation {
                         &|coord, size, style| {
                             EmptyElement::at(coord)
                                 + Circle::new((0, 0), size, style)
+                        },
+                    ))?;
+
+                    chart_builder.draw_series(PointSeries::of_element(
+                        vec![(min_x.float(), point.1.float())],
+                        2,
+                        ShapeStyle::from(&GREY).filled(),
+                        &|coord, size, style| {
+                            EmptyElement::at(coord)
+                                + Circle::new((0, 0), size, style)
+                                + Text::new(format!("{:.2}", point.1.float()), (5, -18), ("sans-serif", 18))
                         },
                     ))?;
                 }

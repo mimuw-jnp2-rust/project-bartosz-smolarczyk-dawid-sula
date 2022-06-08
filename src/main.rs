@@ -1,9 +1,9 @@
 mod economy;
 mod util;
 
-use std::{fs::File, path::Path};
+use std::path::Path;
 
-use crate::economy::simulation::{Simulation, SimulationBuilder};
+use crate::economy::simulation::Simulation;
 
 fn main() {
     /* get command line arguments from user */
@@ -26,5 +26,5 @@ fn main() {
     };
 
     simulation.run();
-    simulation.plot(&args[2]);
+    simulation.plot(&args[2]).unwrap();
 }
