@@ -15,6 +15,11 @@ fn main() {
 
     /* convert input string into file path */
     let input_path = Path::new(&args[1]);
+    let output_path = Path::new(&args[2]);
+
+    /* check if files exist */
+    assert!(input_path.is_file());
+    assert!(output_path.is_file());
 
     /* load the simulation */
     let mut simulation = match Simulation::read_from_file(&input_path) {
@@ -26,5 +31,5 @@ fn main() {
     };
 
     simulation.run();
-    simulation.plot(&args[2]).unwrap();
+    simulation.plot(output_path.to_str().unwrap()).unwrap();
 }
