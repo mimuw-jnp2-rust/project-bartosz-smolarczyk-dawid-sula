@@ -124,6 +124,10 @@ impl Market {
         &self.geography
     }
 
+    pub fn cities(&self) -> &DashMap<CityId, CityData> {
+        &self.cities
+    }
+
     pub fn add_producer(&mut self, prod: &Producer) {
         self.cities
             .get_mut(&prod.city())

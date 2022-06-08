@@ -13,9 +13,8 @@ fn main() {
         std::process::exit(1);
     }
 
-    /* convert input strings into file paths */
+    /* convert input string into file path */
     let input_path = Path::new(&args[1]);
-    let output_path = Path::new(&args[2]);
 
     /* load the simulation */
     let mut simulation = match Simulation::read_from_file(&input_path) {
@@ -27,14 +26,5 @@ fn main() {
     };
 
     simulation.run();
-    println!("{:#?}", simulation);
     simulation.plot(&args[2]);
-
-    // let output_file = match File::create(&output_path) {
-    //     Err(why) => {
-    //         eprintln!("could not create {}: {}", output_path.display(), why);
-    //         std::process::exit(1);
-    //     }
-    //     Ok(file) => file,
-    // };
 }
