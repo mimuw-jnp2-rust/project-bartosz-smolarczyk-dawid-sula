@@ -224,7 +224,7 @@ impl Simulation {
                         + Circle::new((0, 0), size, style)
                         + Text::new(
                             format!("{:.2}", min_y.float()),
-                            (-30 - 8 * (min_y.float().log10() as i32), -8),
+                            (-30, -8),
                             ("sans-serif", 12),
                         )
                 },
