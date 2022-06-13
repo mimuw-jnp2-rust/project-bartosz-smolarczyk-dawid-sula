@@ -17,6 +17,7 @@ impl Price {
     pub fn max() -> Price {
         Price::new(InnerValue::MAX)
     }
+    #[allow(dead_code)]
     pub fn zero() -> Price {
         Price::new(0.)
     }

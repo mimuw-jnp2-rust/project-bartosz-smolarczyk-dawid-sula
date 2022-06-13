@@ -60,7 +60,7 @@ impl Function {
             left_value: *left_value,
             right_arg: *right_arg,
             right_value: *right_value,
-            intervals: intervals,
+            intervals,
         }
     }
 

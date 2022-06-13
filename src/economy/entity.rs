@@ -12,6 +12,7 @@ pub struct Producer {
 }
 
 impl Producer {
+    #[allow(dead_code)]
     pub fn new(city: CityId, production_costs: Supply) -> Producer {
         Producer {
             city,
@@ -40,6 +41,7 @@ pub struct Consumer {
 }
 
 impl Consumer {
+    #[allow(dead_code)]
     pub fn new(city: CityId, usefulness: Demand) -> Consumer {
         Consumer { city, usefulness }
     }

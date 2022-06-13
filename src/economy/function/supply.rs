@@ -20,6 +20,7 @@ impl Supply {
         }
     }
 
+    #[allow(dead_code)]
     pub fn new<I>(values: I) -> Supply
     where
         I: Iterator<Item = (ArgT, ValueT)>,
@@ -33,10 +34,12 @@ impl Supply {
         &self.function
     }
 
+    #[allow(dead_code)]
     pub fn intersect(&self, demand: &Demand) -> MarketState {
         demand.intersect(self)
     }
 
+    #[allow(dead_code)]
     pub fn intervals(&self) -> Vec<(ArgT, ValueT)> {
         self.function.intervals()
     }

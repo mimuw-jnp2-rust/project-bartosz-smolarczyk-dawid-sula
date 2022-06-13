@@ -11,9 +11,11 @@ pub struct Volume {
 }
 
 impl Volume {
+    #[allow(dead_code)]
     pub fn min() -> Volume {
         Volume::new(InnerValue::MIN)
     }
+    #[allow(dead_code)]
     pub fn max() -> Volume {
         Volume::new(InnerValue::MAX)
     }
@@ -43,6 +45,7 @@ impl Volume {
         self.value
     }
 
+    #[allow(dead_code)]
     pub fn abs(&self) -> Self {
         if self.float() > 0. {
             *self

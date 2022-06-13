@@ -12,6 +12,7 @@ pub struct City {
 }
 
 impl City {
+    #[allow(dead_code)]
     pub fn new(id: CityId, name: String) -> City {
         City { id, name }
     }
@@ -20,6 +21,7 @@ impl City {
         self.id
     }
 
+    #[allow(dead_code)]
     pub fn name(&self) -> &String {
         &self.name
     }

@@ -6,7 +6,6 @@ use crate::economy::function::Supply;
 use crate::economy::geography::CityId;
 use crate::economy::geography::Geography;
 use dashmap::DashMap;
-use ordered_float::NotNan;
 use rayon::prelude::*;
 use std::collections::BTreeMap;
 
@@ -135,6 +134,7 @@ impl Market {
             .add_supply(prod.supply())
     }
 
+    #[allow(dead_code)]
     pub fn remove_producer(&mut self, prod: &Producer) {
         self.cities
             .get_mut(&prod.city())
@@ -149,6 +149,7 @@ impl Market {
             .add_demand(cons.demand())
     }
 
+    #[allow(dead_code)]
     pub fn remove_consumer(&mut self, cons: &Consumer) {
         self.cities
             .get_mut(&cons.city())
@@ -156,10 +157,12 @@ impl Market {
             .substract_demand(cons.demand())
     }
 
+    #[allow(dead_code)]
     pub fn prices(&self) -> BTreeMap<CityId, Option<Price>> {
         self.cities.iter().map(|x| (*x.key(), x.price())).collect()
     }
 
+    #[allow(dead_code)]
     pub fn demand_volumes(&self) -> BTreeMap<CityId, Option<Volume>> {
         self.cities
             .iter()
@@ -167,6 +170,7 @@ impl Market {
             .collect()
     }
 
+    #[allow(dead_code)]
     pub fn supply_volumes(&self) -> BTreeMap<CityId, Option<Volume>> {
         self.cities
             .iter()
@@ -193,34 +197,31 @@ impl Market {
             let cost = conn.cost();
 
             let (price_from, price_to) = match (
-                self.cities.get(&id_from).unwrap().state,
-                self.cities.get(&id_to).unwrap().state,
+                self.cities.get(&id_from).unwrap().state(),
+                self.cities.get(&id_to).unwrap().state(),
             ) {
                 (
                     MarketState::Equilibrium(price_from, _, _),
                     MarketState::Equilibrium(price_to, _, _),
-                ) => (price_from, price_to),
+                ) => (*price_from, *price_to),
                 (MarketState::OverSupply, MarketState::Equilibrium(price_to, _, _)) => {
-                    (Price::min(), price_to)
+                    (Price::min(), *price_to)
                 }
                 (MarketState::UnderSupply, MarketState::Equilibrium(price_to, _, _)) => {
-                    (Price::max(), price_to)
+                    (Price::max(), *price_to)
                 }
                 (MarketState::Equilibrium(price_from, _, _), MarketState::OverSupply) => {
-                    (price_from, Price::min())
+                    (*price_from, Price::min())
                 }
                 (MarketState::Equilibrium(price_from, _, _), MarketState::UnderSupply) => {
-                    (price_from, Price::max())
+                    (*price_from, Price::max())
                 }
                 (MarketState::UnderSupply, MarketState::OverSupply) => (Price::max(), Price::min()),
                 (MarketState::OverSupply, MarketState::UnderSupply) => (Price::min(), Price::max()),
-                _ => {
-                    // Initiates identical values so that they will be only connected when transport between them is free.
-                    (Price::new(0.), Price::new(0.))
-                }
+                _ => (Price::new(0.), Price::new(0.)),
             };
 
-            if price_from - price_to >= cost || price_to - price_from >= cost {
+            if (price_from - price_to).abs() >= cost {
                 self.calculate_groups_dfs(
                     id_to,
                     group_id,
@@ -299,6 +300,7 @@ impl Market {
         }
     }
 
+    #[allow(dead_code)]
     pub fn reset_prices(&mut self) {
         self.cities
             .iter_mut()
@@ -311,7 +313,6 @@ pub mod tests {
     use crate::economy::entity::Consumer;
     use crate::economy::entity::Producer;
     use crate::economy::function::Demand;
-    use crate::economy::function::Function;
     use crate::economy::function::Supply;
     use crate::economy::geography::City;
     use crate::economy::geography::CityId;
@@ -323,12 +324,12 @@ pub mod tests {
     use crate::economy::types::InnerValue;
     use crate::economy::types::Price;
     use crate::economy::types::Volume;
-    use crate::util::testing::make_function;
+    use crate::util::testing::make_demand;
+    use crate::util::testing::make_supply;
     use crate::util::testing::test_eq_arg;
     use crate::util::testing::test_eq_value;
 
     use dashmap::DashMap;
-    use ordered_float::NotNan;
     use std::collections::BTreeMap;
 
     fn generate_cities(
@@ -372,7 +373,7 @@ pub mod tests {
                 .collect();
 
             for (base, group) in groups {
-                for (id, diff) in group {
+                for (id, _) in group {
                     id_to_group.insert(*id, *base);
                 }
             }
@@ -511,8 +512,6 @@ pub mod tests {
 
     #[cfg(test)]
     mod calculation {
-        use crate::util::testing::{make_demand, make_supply};
-
         use super::*;
 
         #[test]

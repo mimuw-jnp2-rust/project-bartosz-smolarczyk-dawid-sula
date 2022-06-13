@@ -20,6 +20,7 @@ impl Demand {
         }
     }
 
+    #[allow(dead_code)]
     pub fn new<I>(values: I) -> Demand
     where
         I: Iterator<Item = (ArgT, ValueT)>,
@@ -48,6 +49,7 @@ impl Demand {
         }
     }
 
+    #[allow(dead_code)]
     pub fn intervals(&self) -> Vec<(ArgT, ValueT)> {
         self.function.intervals()
     }
