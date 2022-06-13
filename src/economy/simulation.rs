@@ -158,18 +158,20 @@ impl Simulation {
                 city_data.supply().function().max_value(),
                 city_data.demand().function().max_value(),
             ) * 1.1;
-            let exchange_min: ValueT = min(
-                city_data.supply_volume().unwrap(),
-                city_data.demand_volume().unwrap(),
-            );
-            let exchange_max: ValueT = max(
-                city_data.supply_volume().unwrap(),
-                city_data.demand_volume().unwrap(),
-            );
+            let exchange_min: Option<ValueT> = city_data
+                .supply_volume()
+                .zip(city_data.demand_volume())
+                .map(|(x, y)| min(x, y));
+            let exchange_max: Option<ValueT> = city_data
+                .supply_volume()
+                .zip(city_data.demand_volume())
+                .map(|(x, y)| max(x, y));
 
             /* steps for specific plots */
             let series_step: ArgT = (max_x - min_x) / SERIES_STEPS;
-            let exchange_step: ValueT = (exchange_max - exchange_min) / SERIES_STEPS;
+            let exchange_step: Option<ValueT> = exchange_min
+                .zip(exchange_max)
+                .map(|(x, y)| (y - x) / SERIES_STEPS);
             let dotted_step_horizontal: ArgT = (max_x - min_x) / DOTTED_STEPS_HORIZONTAL;
             let dotted_step_vertical: ValueT = (max_y - min_y) / DOTTED_STEPS_VERTICAL;
 
@@ -179,8 +181,10 @@ impl Simulation {
 
             /* ranges for x_axis functions and exchange */
             let x_axis = (min_x.float()..max_x.float()).step(series_step.float());
-            let exchange_line_vertical =
-                (exchange_min.float()..exchange_max.float()).step(exchange_step.float());
+            let exchange_line_vertical = exchange_min
+                .zip(exchange_max)
+                .zip(exchange_step)
+                .map(|((min, max), step)| (min.float()..max.float()).step(step.float()));
 
             /* plot initialization */
             let mut chart_builder = ChartBuilder::on(&current_area)
@@ -207,7 +211,7 @@ impl Simulation {
                 vec![(min_x.float(), min_y.float())],
                 0,
                 ShapeStyle::from(&BLACK).filled(),
-                &|coord, size, style| {
+                &|coord, size: u32, style| {
                     EmptyElement::at(coord)
                         + Circle::new((0, 0), size, style)
                         + Text::new(format!("{:.2}", min_x.float()), (0, 10), ("sans-serif", 12))
@@ -219,7 +223,7 @@ impl Simulation {
                 vec![(min_x.float(), min_y.float())],
                 0,
                 ShapeStyle::from(&BLACK).filled(),
-                &|coord, size, style| {
+                &|coord, size: u32, style| {
                     EmptyElement::at(coord)
                         + Circle::new((0, 0), size, style)
                         + Text::new(
@@ -271,22 +275,24 @@ impl Simulation {
                 });
 
             /* drawing the exchange */
-            chart_builder
-                .draw_series(LineSeries::new(
-                    exchange_line_vertical.values().map(|y| (min_x.float(), y)),
-                    Into::<ShapeStyle>::into(&GREEN_DARK)
-                        .filled()
-                        .stroke_width(EXCHANGE_WIDTH),
-                ))?
-                .label("Exchange")
-                .legend(|(x, y)| {
-                    PathElement::new(
-                        vec![(x, y), (x + 25, y)],
+            if let Some(ex) = exchange_line_vertical {
+                chart_builder
+                    .draw_series(LineSeries::new(
+                        ex.values().map(|y| (min_x.float(), y)),
                         Into::<ShapeStyle>::into(&GREEN_DARK)
                             .filled()
-                            .stroke_width(LEGEND_WIDTH),
-                    )
-                });
+                            .stroke_width(EXCHANGE_WIDTH),
+                    ))?
+                    .label("Exchange")
+                    .legend(|(x, y)| {
+                        PathElement::new(
+                            vec![(x, y), (x + 25, y)],
+                            Into::<ShapeStyle>::into(&GREEN_DARK)
+                                .filled()
+                                .stroke_width(LEGEND_WIDTH),
+                        )
+                    });
+            };
 
             /* drawing the chart legend */
             chart_builder
@@ -299,97 +305,101 @@ impl Simulation {
                 .supply()
                 .function()
                 .intersect(city_data.demand().function());
-            let local_supply: (ArgT, ValueT) = (
-                city_data.price().unwrap(),
-                city_data.supply_volume().unwrap(),
-            );
-            let local_demand: (ArgT, ValueT) = (
-                city_data.price().unwrap(),
-                city_data.demand_volume().unwrap(),
-            );
+            let local_supply: Option<(ArgT, ValueT)> =
+                city_data.price().zip(city_data.supply_volume());
+            let local_demand: Option<(ArgT, ValueT)> =
+                city_data.price().zip(city_data.demand_volume());
 
-            let mut interest_points: Vec<((ArgT, ValueT), String)> = vec![
-                (local_supply, String::from("current supply")),
-                (local_demand, String::from("current demand")),
-            ];
+            let mut interest_points: Option<Vec<((ArgT, ValueT), String)>> =
+                local_supply.zip(local_demand).map(|(sup, dem)| {
+                    vec![
+                        (sup, String::from("current supply")),
+                        (dem, String::from("current demand")),
+                    ]
+                });
             if let Some(..) = intersection {
-                interest_points.push((intersection.unwrap(), String::from("no exchange")));
+                interest_points = interest_points.map(|mut x| {
+                    x.push((intersection.unwrap(), String::from("no exchange")));
+                    x
+                });
             }
 
             /* loop for marking the interest points on the plot */
-            for (point, description) in interest_points {
-                /* ranges for drawing dotted lines between points */
-                let dotted_line_vertical =
-                    (min_y.float()..point.1.float()).step(dotted_step_vertical.float());
-                let dotted_line_horizontal =
-                    (min_x.float()..point.0.float()).step(dotted_step_horizontal.float());
+            if let Some(points) = interest_points {
+                for (point, description) in points {
+                    /* ranges for drawing dotted lines between points */
+                    let dotted_line_vertical =
+                        (min_y.float()..point.1.float()).step(dotted_step_vertical.float());
+                    let dotted_line_horizontal =
+                        (min_x.float()..point.0.float()).step(dotted_step_horizontal.float());
 
-                /* point on the plot */
-                chart_builder.draw_series(PointSeries::of_element(
-                    vec![(point.0.float(), point.1.float())],
-                    5,
-                    ShapeStyle::from(&GREY).filled(),
-                    &|coord, size, style| {
-                        EmptyElement::at(coord)
-                            + Circle::new((0, 0), size, style)
-                            + Text::new(description.clone(), (5, -18), ("sans-serif", 20))
-                    },
-                ))?;
-
-                /* corresponding point on the x_axis */
-                chart_builder.draw_series(PointSeries::of_element(
-                    vec![(point.0.float(), min_y.float())],
-                    2,
-                    ShapeStyle::from(&GREY).filled(),
-                    &|coord, size, style| {
-                        EmptyElement::at(coord)
-                            + Circle::new((0, 0), size, style)
-                            + Text::new(
-                                format!("{:.2}", point.0.float()),
-                                (5, -16),
-                                ("sans-serif", 18),
-                            )
-                    },
-                ))?;
-
-                /* dotted line connecting plot point and x_axis point */
-                chart_builder.draw_series(PointSeries::of_element(
-                    dotted_line_vertical.values().map(|y| (point.0.float(), y)),
-                    1,
-                    ShapeStyle::from(&GREY).filled(),
-                    &|coord, size, style| {
-                        EmptyElement::at(coord) + Circle::new((0, 0), size, style)
-                    },
-                ))?;
-
-                if description != "no exchange" {
-                    /* corresponding point on the y_axis */
+                    /* point on the plot */
                     chart_builder.draw_series(PointSeries::of_element(
-                        vec![(min_x.float(), point.1.float())],
+                        vec![(point.0.float(), point.1.float())],
+                        5,
+                        ShapeStyle::from(&GREY).filled(),
+                        &|coord, size: u32, style| {
+                            EmptyElement::at(coord)
+                                + Circle::new((0, 0), size, style)
+                                + Text::new(description.clone(), (5, -18), ("sans-serif", 20))
+                        },
+                    ))?;
+
+                    /* corresponding point on the x_axis */
+                    chart_builder.draw_series(PointSeries::of_element(
+                        vec![(point.0.float(), min_y.float())],
                         2,
                         ShapeStyle::from(&GREY).filled(),
-                        &|coord, size, style| {
+                        &|coord, size: u32, style| {
                             EmptyElement::at(coord)
                                 + Circle::new((0, 0), size, style)
                                 + Text::new(
-                                    format!("{:.2}", point.1.float()),
-                                    (5, -18),
+                                    format!("{:.2}", point.0.float()),
+                                    (5, -16),
                                     ("sans-serif", 18),
                                 )
                         },
                     ))?;
 
-                    /* dotted line connecting plot point and y_axis point */
+                    /* dotted line connecting plot point and x_axis point */
                     chart_builder.draw_series(PointSeries::of_element(
-                        dotted_line_horizontal
-                            .values()
-                            .map(|x| (x, point.1.float())),
+                        dotted_line_vertical.values().map(|y| (point.0.float(), y)),
                         1,
                         ShapeStyle::from(&GREY).filled(),
-                        &|coord, size, style| {
+                        &|coord, size: u32, style| {
                             EmptyElement::at(coord) + Circle::new((0, 0), size, style)
                         },
                     ))?;
+
+                    if description != "no exchange" {
+                        /* corresponding point on the y_axis */
+                        chart_builder.draw_series(PointSeries::of_element(
+                            vec![(min_x.float(), point.1.float())],
+                            2,
+                            ShapeStyle::from(&GREY).filled(),
+                            &|coord, size: u32, style| {
+                                EmptyElement::at(coord)
+                                    + Circle::new((0, 0), size, style)
+                                    + Text::new(
+                                        format!("{:.2}", point.1.float()),
+                                        (5, -18),
+                                        ("sans-serif", 18),
+                                    )
+                            },
+                        ))?;
+
+                        /* dotted line connecting plot point and y_axis point */
+                        chart_builder.draw_series(PointSeries::of_element(
+                            dotted_line_horizontal
+                                .values()
+                                .map(|x| (x, point.1.float())),
+                            1,
+                            ShapeStyle::from(&GREY).filled(),
+                            &|coord, size: u32, style| {
+                                EmptyElement::at(coord) + Circle::new((0, 0), size, style)
+                            },
+                        ))?;
+                    }
                 }
             }
         }
