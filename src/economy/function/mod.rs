@@ -28,10 +28,12 @@ pub trait FunctionAbstract {
 
     fn shift_right(&mut self, shift: ArgT) -> &mut Self;
     fn shift_left(&mut self, shift: ArgT) -> &mut Self;
+
+    fn negate(&mut self) -> &mut Self;
 }
 
 #[derive(Clone, Debug)]
-pub struct Function {
+struct FunctionBase {
     left_arg: ArgT,
     left_value: ValueT,
     right_arg: ArgT,
@@ -39,13 +41,8 @@ pub struct Function {
     intervals: BTreeMap<ArgT, ValueT>,
 }
 
-impl Function {
-    pub fn zero() -> Function {
-        let intervals = vec![(ArgT::new(0.), ValueT::new(0.))];
-        Function::new(intervals.into_iter())
-    }
-
-    pub fn new<I>(values: I) -> Function
+impl FunctionBase {
+    pub fn new<I>(values: I) -> Self
     where
         I: Iterator<Item = (ArgT, ValueT)>,
     {
@@ -55,7 +52,7 @@ impl Function {
         let (left_arg, left_value) = intervals.iter().next().unwrap();
         let (right_arg, right_value) = intervals.iter().next_back().unwrap();
 
-        Function {
+        Self {
             left_arg: *left_arg,
             left_value: *left_value,
             right_arg: *right_arg,
@@ -127,6 +124,7 @@ impl Function {
         **args.iter().min().unwrap()
     }
 
+    #[allow(dead_code)]
     pub fn min_value(&self) -> ValueT {
         let values = Vec::from_iter(self.intervals.values());
         **values.iter().min().unwrap()
@@ -143,7 +141,7 @@ impl Function {
     }
 }
 
-impl FunctionAbstract for Function {
+impl FunctionAbstract for FunctionBase {
     fn value(&self, arg: ArgT) -> ValueT {
         match (self.lower_bound(arg), self.upper_bound(arg)) {
             (Some((lower_arg, lower_val)), Some((upper_arg, upper_val))) => {
@@ -179,7 +177,7 @@ impl FunctionAbstract for Function {
     }
 
     fn add_function(&mut self, function: &Self) -> &mut Self {
-        let args_combined = Function::combine_data_points(self, function);
+        let args_combined = Self::combine_data_points(self, function);
         let intervals: BTreeMap<ArgT, ValueT> = args_combined
             .into_iter()
             .map(|arg| (arg, self.value(arg) + function.value(arg)))
@@ -197,7 +195,7 @@ impl FunctionAbstract for Function {
     }
 
     fn substract_function(&mut self, function: &Self) -> &mut Self {
-        let args_combined = Function::combine_data_points(self, function);
+        let args_combined = Self::combine_data_points(self, function);
         let intervals: BTreeMap<ArgT, ValueT> = args_combined
             .into_iter()
             .map(|arg| (arg, self.value(arg) - function.value(arg)))
@@ -228,9 +226,16 @@ impl FunctionAbstract for Function {
     fn shift_left(&mut self, shift: ArgT) -> &mut Self {
         self.shift_right(-shift)
     }
+
+    fn negate(&mut self) -> &mut Self {
+        self.left_arg = -self.left_arg;
+        self.right_arg = -self.right_arg;
+        self.intervals = self.intervals.iter().map(|(x, y)| (*x, -*y)).collect();
+        self
+    }
 }
 
-impl Serialize for Function {
+impl Serialize for FunctionBase {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
@@ -240,13 +245,178 @@ impl Serialize for Function {
     }
 }
 
-impl<'de> Deserialize<'de> for Function {
+impl<'de> Deserialize<'de> for FunctionBase {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
         let values: Vec<(ArgT, ValueT)> = Vec::deserialize(deserializer)?;
-        Ok(Function::new(values.into_iter()))
+        Ok(Self::new(values.into_iter()))
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct FunctionNullable {
+    function: Option<FunctionBase>,
+}
+
+impl FunctionNullable {
+    pub fn zero() -> Self {
+        Self { function: None }
+    }
+
+    pub fn new<I>(values: I) -> Self
+    where
+        I: Iterator<Item = (ArgT, ValueT)>,
+    {
+        Self {
+            function: Some(FunctionBase::new(values)),
+        }
+    }
+
+    pub fn intersect(&self, other: &Self) -> Option<(ArgT, ValueT)> {
+        self.function
+            .as_ref()
+            .zip(other.function.as_ref())
+            .and_then(|(x, y)| x.intersect(y))
+    }
+
+    pub fn intervals(&self) -> Vec<(ArgT, ValueT)> {
+        self.function
+            .as_ref()
+            .map(|x| x.intervals())
+            .unwrap_or_default()
+    }
+
+    pub fn min_arg(&self) -> ArgT {
+        self.function
+            .as_ref()
+            .map(|x| x.min_arg())
+            .unwrap_or_else(ArgT::zero)
+    }
+
+    #[allow(dead_code)]
+    pub fn min_value(&self) -> ValueT {
+        self.function
+            .as_ref()
+            .map(|x| x.min_value())
+            .unwrap_or_else(ValueT::zero)
+    }
+
+    pub fn max_arg(&self) -> ArgT {
+        self.function
+            .as_ref()
+            .map(|x| x.max_arg())
+            .unwrap_or_else(ArgT::zero)
+    }
+
+    pub fn max_value(&self) -> ValueT {
+        self.function
+            .as_ref()
+            .map(|x| x.max_value())
+            .unwrap_or_else(ValueT::zero)
+    }
+
+    pub fn left_value(&self) -> ValueT {
+        self.function
+            .as_ref()
+            .map(|x| x.left_value)
+            .unwrap_or_else(ValueT::zero)
+    }
+
+    pub fn right_value(&self) -> ValueT {
+        self.function
+            .as_ref()
+            .map(|x| x.right_value)
+            .unwrap_or_else(ValueT::zero)
+    }
+}
+
+impl FunctionAbstract for FunctionNullable {
+    fn value(&self, arg: ArgT) -> ValueT {
+        self.function
+            .as_ref()
+            .map(|x| x.value(arg))
+            .unwrap_or_else(ValueT::zero)
+    }
+
+    fn add_value(&mut self, value: ValueT) -> &mut Self {
+        self.function.as_mut().map(|x| x.add_value(value));
+        self
+    }
+
+    fn substract_value(&mut self, value: ValueT) -> &mut Self {
+        self.function.as_mut().map(|x| x.substract_value(value));
+        self
+    }
+
+    fn add_function(&mut self, function: &Self) -> &mut Self {
+        match (self.function.as_mut(), function.function.as_ref()) {
+            (Some(f1), Some(f2)) => {
+                f1.add_function(f2);
+            }
+            (None, Some(f2)) => {
+                self.function = Some(f2.clone());
+            }
+            (_, None) => {}
+        };
+        self
+    }
+
+    fn substract_function(&mut self, function: &Self) -> &mut Self {
+        match (self.function.as_mut(), function.function.as_ref()) {
+            (Some(f1), Some(f2)) => {
+                f1.substract_function(f2);
+            }
+            (None, Some(f2)) => {
+                let mut negated_f = f2.clone();
+                negated_f.negate();
+                self.function = Some(negated_f);
+            }
+            (_, None) => {}
+        };
+        self
+    }
+
+    fn shift_right(&mut self, shift: ArgT) -> &mut Self {
+        self.function.as_mut().map(|x| x.shift_right(shift));
+        self
+    }
+
+    fn shift_left(&mut self, shift: ArgT) -> &mut Self {
+        self.function.as_mut().map(|x| x.shift_left(shift));
+        self
+    }
+
+    fn negate(&mut self) -> &mut Self {
+        self.function.as_mut().map(|x| x.negate());
+        self
+    }
+}
+
+impl Serialize for FunctionNullable {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self.function.as_ref() {
+            Some(f) => f.serialize(serializer),
+            None => Vec::<(ArgT, ValueT)>::serialize(&Vec::new(), serializer),
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for FunctionNullable {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let values: Vec<(ArgT, ValueT)> = Vec::deserialize(deserializer)?;
+        if values.len() > 0 {
+            Ok(Self::new(values.into_iter()))
+        } else {
+            Ok(Self { function: None })
+        }
     }
 }
 

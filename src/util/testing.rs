@@ -1,5 +1,5 @@
 use crate::economy::{
-    function::{ArgT, Demand, Function, Supply, ValueT},
+    function::{ArgT, Demand, FunctionNullable, Supply, ValueT},
     types::InnerValue,
 };
 
@@ -10,8 +10,8 @@ fn prepare_values_for_function(values: Vec<(InnerValue, InnerValue)>) -> Vec<(Ar
         .collect()
 }
 
-pub fn make_function(values: Vec<(InnerValue, InnerValue)>) -> Function {
-    Function::new(prepare_values_for_function(values).into_iter())
+pub fn make_function(values: Vec<(InnerValue, InnerValue)>) -> FunctionNullable {
+    FunctionNullable::new(prepare_values_for_function(values).into_iter())
 }
 
 pub fn make_demand(values: Vec<(InnerValue, InnerValue)>) -> Demand {

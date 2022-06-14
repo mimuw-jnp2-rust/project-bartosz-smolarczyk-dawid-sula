@@ -3,20 +3,20 @@ use serde::Serialize;
 
 use crate::economy::function::supply::Supply;
 use crate::economy::function::ArgT;
-use crate::economy::function::Function;
 use crate::economy::function::FunctionAbstract;
+use crate::economy::function::FunctionNullable;
 use crate::economy::function::ValueT;
 use crate::economy::market::MarketState;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Demand {
-    function: Function,
+    function: FunctionNullable,
 }
 
 impl Demand {
     pub fn zero() -> Demand {
         Demand {
-            function: Function::zero(),
+            function: FunctionNullable::zero(),
         }
     }
 
@@ -26,11 +26,11 @@ impl Demand {
         I: Iterator<Item = (ArgT, ValueT)>,
     {
         Demand {
-            function: Function::new(values),
+            function: FunctionNullable::new(values),
         }
     }
 
-    pub fn function(&self) -> &Function {
+    pub fn function(&self) -> &FunctionNullable {
         &self.function
     }
 
@@ -38,12 +38,12 @@ impl Demand {
         match self.function.intersect(supply.function()) {
             Some((price, amount)) => MarketState::Equilibrium(price, amount, amount),
             None => {
-                if self.function().right_value > supply.function().right_value {
+                if self.function().right_value() > supply.function().right_value() {
                     MarketState::UnderSupply
-                } else if self.function().left_value < supply.function().left_value {
+                } else if self.function().left_value() < supply.function().left_value() {
                     MarketState::OverSupply
                 } else {
-                    unreachable!()
+                    MarketState::Undefined
                 }
             }
         }
@@ -69,20 +69,29 @@ impl FunctionAbstract for Demand {
         self.function.substract_value(value);
         self
     }
+
     fn add_function(&mut self, fun: &Self) -> &mut Self {
         self.function.add_function(fun.function());
         self
     }
+
     fn substract_function(&mut self, fun: &Self) -> &mut Self {
         self.function.substract_function(fun.function());
         self
     }
+
     fn shift_right(&mut self, arg: ArgT) -> &mut Self {
         self.function.shift_right(arg);
         self
     }
+
     fn shift_left(&mut self, arg: ArgT) -> &mut Self {
         self.function.shift_left(arg);
+        self
+    }
+
+    fn negate(&mut self) -> &mut Self {
+        self.function.negate();
         self
     }
 }

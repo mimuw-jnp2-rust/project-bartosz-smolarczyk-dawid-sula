@@ -17,7 +17,7 @@ use crate::economy::geography::CityId;
 use crate::economy::geography::Connection;
 use crate::economy::geography::Geography;
 use crate::economy::market::Market;
-use crate::economy::types::InnerValue;
+use crate::economy::types::{InnerValue, Volume};
 
 pub type ArgT = crate::economy::types::Price;
 pub type ValueT = crate::economy::types::Volume;
@@ -150,10 +150,7 @@ impl Simulation {
                 city_data.supply().function().max_arg(),
                 city_data.demand().function().max_arg(),
             );
-            let min_y: ValueT = min(
-                city_data.supply().function().min_value(),
-                city_data.demand().function().min_value(),
-            );
+            let min_y: ValueT = Volume::zero();
             let max_y: ValueT = max(
                 city_data.supply().function().max_value(),
                 city_data.demand().function().max_value(),

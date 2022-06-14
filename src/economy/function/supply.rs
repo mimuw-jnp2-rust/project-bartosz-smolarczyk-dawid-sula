@@ -3,20 +3,20 @@ use serde::Serialize;
 
 use crate::economy::function::demand::Demand;
 use crate::economy::function::ArgT;
-use crate::economy::function::Function;
 use crate::economy::function::FunctionAbstract;
+use crate::economy::function::FunctionNullable;
 use crate::economy::function::ValueT;
 use crate::economy::market::MarketState;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Supply {
-    function: Function,
+    function: FunctionNullable,
 }
 
 impl Supply {
     pub fn zero() -> Supply {
         Supply {
-            function: Function::zero(),
+            function: FunctionNullable::zero(),
         }
     }
 
@@ -26,11 +26,11 @@ impl Supply {
         I: Iterator<Item = (ArgT, ValueT)>,
     {
         Supply {
-            function: Function::new(values),
+            function: FunctionNullable::new(values),
         }
     }
 
-    pub fn function(&self) -> &Function {
+    pub fn function(&self) -> &FunctionNullable {
         &self.function
     }
 
@@ -59,20 +59,29 @@ impl FunctionAbstract for Supply {
         self.function.substract_value(value);
         self
     }
+
     fn add_function(&mut self, fun: &Self) -> &mut Self {
         self.function.add_function(fun.function());
         self
     }
+
     fn substract_function(&mut self, fun: &Self) -> &mut Self {
         self.function.substract_function(fun.function());
         self
     }
+
     fn shift_right(&mut self, arg: ArgT) -> &mut Self {
         self.function.shift_right(arg);
         self
     }
+
     fn shift_left(&mut self, arg: ArgT) -> &mut Self {
         self.function.shift_left(arg);
+        self
+    }
+
+    fn negate(&mut self) -> &mut Self {
+        self.function.negate();
         self
     }
 }
