@@ -24,7 +24,7 @@ Aplikacja analizująca zachowanie cen na rynku, na którym ważnym czynnikiem s�
 ## Propozycja podziału na części
 Część pierwsza: zaimplementowanie podstawowych funkcjonalności.
 
-Część druga: równoległość podczas obliczania wyniku.
+Część druga: równoległość podczas obliczania wyniku, przedstawianie wyniku na wykresie.
 
 ## Biblioteki
 - serde:
