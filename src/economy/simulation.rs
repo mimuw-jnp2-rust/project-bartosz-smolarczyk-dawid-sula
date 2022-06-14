@@ -339,7 +339,7 @@ impl Simulation {
                         &|coord, size: u32, style| {
                             EmptyElement::at(coord)
                                 + Circle::new((0, 0), size, style)
-                                + Text::new(description.clone(), (5, -18), ("sans-serif", 20))
+                                + Text::new(description.clone(), (5, -18), ("arial", 20, "Bold"))
                         },
                     ))?;
 
