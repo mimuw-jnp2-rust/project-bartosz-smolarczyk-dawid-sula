@@ -19,7 +19,6 @@ fn main() {
 
     /* check if files exist */
     assert!(input_path.is_file());
-    assert!(output_path.is_file());
 
     /* load the simulation */
     let mut simulation = match Simulation::read_from_file(&input_path) {
