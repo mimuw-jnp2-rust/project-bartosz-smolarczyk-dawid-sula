@@ -1,27 +1,44 @@
-# Frobnicator
+# Nazwa
 
 ## Autorzy
-- Andrzej Głuszak (gr 9, @agluszak na githubie)
-- Linus Torvalds (Uniwersytet Helsiński, @torvalds na githubie)
+- Dawid Sula (@dawidsula26 na githubie)
+- Bartosz Smolarczyk (@SmolSir na githubie)
 
 ## Opis
-Od zawsze chcieliśmy napisać grę komputerową.
-Frobnicator będzie to gra platformowa, w której chodzi o to, żeby...
-
-Z grubsza będziemy wzorować się na [tym tutorialu](https://dev.to/sbelzile/rust-platformer-part-1-bevy-and-ecs-2pci).
+Aplikacja analizująca zachowanie cen na rynku, na którym ważnym czynnikiem są koszty transportu. Aplikacja otrzymywałaby: siatkę połączeń pomiędzy różnymi miejscami; koszty transportu towaru między nimi; funkcje popytu i podaży w podanych miejscach. Na ich podstawie ustalałaby jak ukształtują się ceny w różnych miejsach.
 
 ## Funkcjonalność
-- Generowanie map
-- Strzelanie
-- AI dla wrogów (bardziej rozbudowane niż w tutorialu)
-- Możliwość zapisywania i wczytywania stanu gry
-- Punktacja
+- Podstawowa:
+    - wczytywanie funkcji popytu i podaży z pliku
+    - wczytywanie opisu połączeń i kosztów
+    - liczenie wyniku dla popytu/podaży opisanych jako tablice - O(liczba jednostek dobra na rynku)
+    - proste wyświetlanie wyników 
+
+- Dodatkowa:
+    - wyświetlanie tras, na których transportowane są dobra
+
+- Rozszerzona (jeżeli będzie chciała działać):
+    - liczenie wyniku dla bardziej zwięzłych opisów popytu/podaży - poprawienie działania na rynkach gdzie jest bardzo dużo jednostek.
+    - rozwiązywanie podobnego problemu: dodatkowo otrzymujemy koszty produkcji w naszym przedsiębiorstwie i mamy powiedzieć gdzie i ile powinniśmy produkować.
 
 ## Propozycja podziału na części
-W pierwszej części stworzymy grę opartą na tutorialu (z lepszym AI) i jedną zahardcodowaną planszą.
+Część pierwsza: zaimplementowanie podstawowych funkcjonalności.
 
-W drugiej części dodamy do tego losowy generator map, zapisywanie/wczytywanie stanu gry oraz system punktacji.
+Część druga: równoległość podczas obliczania wyniku, przedstawianie wyniku na wykresie.
 
 ## Biblioteki
-- Bevy
-- może coś do serializacji danych? (czy mógłby Pan coś polecić?)
+- serde:
+    - obsługa serializacji i deserializacji plików
+- serde_json:
+    - automatyczna serializacja i deserializacja plików formatu ```JSON``` wykorzystywanych w projekcie
+- plotters:
+    - tworzenie wykresu przedstawiającego kształtowanie się cen w miarę przebiegu symulacji
+    - w razie błędu kompilacji z powodu braku pakietu freetype2 należy go zainstalować poleceniem:
+    
+        ```
+        apt-get install cmake libfreetype6-dev libfontconfig1-dev xclip
+        ```
+- ordered-float:
+    - implementacja reprezentacji funkcji
+- rayon, dashmap:
+    - zrównoleglanie obliczeń podczas wyliczania cen i przetwarzania funkcji
