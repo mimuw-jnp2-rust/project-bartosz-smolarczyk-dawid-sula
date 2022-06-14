@@ -295,6 +295,7 @@ impl Simulation {
             chart_builder
                 .configure_series_labels()
                 .border_style(&BLACK)
+                .background_style(&WHITE)
                 .draw()?;
 
             /* three main interest points of the plot */
