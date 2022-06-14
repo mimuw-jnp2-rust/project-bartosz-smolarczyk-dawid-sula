@@ -412,7 +412,7 @@ impl<'de> Deserialize<'de> for FunctionNullable {
         D: serde::Deserializer<'de>,
     {
         let values: Vec<(ArgT, ValueT)> = Vec::deserialize(deserializer)?;
-        if values.len() > 0 {
+        if !values.is_empty() {
             Ok(Self::new(values.into_iter()))
         } else {
             Ok(Self { function: None })
