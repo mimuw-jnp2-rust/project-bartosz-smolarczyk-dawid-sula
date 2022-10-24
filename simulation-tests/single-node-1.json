@@ -1,0 +1,37 @@
+{
+    "turns":2,
+    "cities":[
+        {
+            "id":0,
+            "name":"Warsaw"
+        }
+    ],
+    "connections":[
+
+    ],
+    "initial_prices":[
+        [0,0]
+    ],
+    "producers":[
+        {
+            "city":0,
+            "production_costs":{
+                "function":[
+                    [0,0],
+                    [4,4]
+                ]
+            }
+        }
+    ],
+    "consumers":[
+        {
+            "city":0,
+            "usefulness":{
+                "function":[
+                    [0,4],
+                    [4,0]
+                ]
+            }
+        }
+    ]
+}
